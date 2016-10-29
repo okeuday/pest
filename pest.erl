@@ -427,12 +427,20 @@ checks_lookup([_ | Checks], Lookup, SeverityMin) ->
 
 analyze_checks(#warnings{checks_lookup = ChecksLookup,
                          instances = Instances} = Warnings, Line, Call) ->
-    case maps:is_key(Call, ChecksLookup) of
+    {Module, _, _} = Call,
+    ProblemFunction = maps:is_key(Call, ChecksLookup),
+    ProblemModule = maps:is_key(Module, ChecksLookup),
+    Store = fun(Problem) ->
+        Lines = maps:get(Problem, Instances, []),
+        NewInstances = maps:put(Problem, [Line | Lines], Instances),
+        Warnings#warnings{instances = NewInstances}
+    end,
+    if
+        ProblemFunction =:= true ->
+            Store(Call);
+        ProblemModule =:= true ->
+            Store(Module);
         true ->
-            Lines = maps:get(Call, Instances, []),
-            NewInstances = maps:put(Call, [Line | Lines], Instances),
-            Warnings#warnings{instances = NewInstances};
-        false ->
             Warnings
     end.
 
