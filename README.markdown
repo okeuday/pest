@@ -22,6 +22,7 @@ is provided with the `-h` command line argument, with the output shown below:
       -c              Perform internal consistency checks
       -e              Only process source files recursively
       -h              List available command line flags
+      -m APPLICATION  Display a list of modules in an Erlang/OTP application
       -r              Recursively search directories
       -s SEVERITY     Set the minimum severity to use when reporting problems
                       (default is 50)
@@ -38,7 +39,7 @@ due to how the Erlang compiler preprocessor and optimizations can influence
 function calls.
 
 Please feel free to contribute!  To add security problems to the scan
-insert information into the [list of checks](https://github.com/okeuday/pest/blob/master/pest.erl#L122-L216).
+insert information into the [list of checks](https://github.com/okeuday/pest/blob/master/pest.erl#L122-L223).
 
 Test
 ----
