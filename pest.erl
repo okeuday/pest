@@ -323,6 +323,12 @@ main_arguments(["-s", SeverityMin | Arguments],
         error:badarg ->
             erlang:error(invalid_severity_min)
     end,
+    if
+        SeverityMinValue < 0; SeverityMinValue > 100 ->
+            erlang:error(invalid_severity_min);
+        true ->
+            ok
+    end,
     main_arguments(Arguments, FilePaths, Directories,
                    State#state{severity_min = SeverityMinValue});
 main_arguments(["-v" | Arguments], FilePaths, Directories, State) ->
