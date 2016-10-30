@@ -26,6 +26,8 @@ is provided with the `-h` command line argument, with the output shown below:
       -s SEVERITY     Set the minimum severity to use when reporting problems
                       (default is 50)
       -v              Verbose output (set the minimum severity to 0)
+      -V [COMPONENT]  Print version information
+                      (valid components are: pest, crypto)
     
 Erlang/OTP version 19.0 and higher is required.
 If beam files are used, they must have been compiled with the `debug_info`
