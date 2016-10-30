@@ -3,6 +3,8 @@
 Primitive Erlang Security Tool (PEST)
 -------------------------------------
 
+[![Build Status](https://secure.travis-ci.org/okeuday/pest.png?branch=master)](http://travis-ci.org/okeuday/pest)
+
 Do a basic scan of Erlang source code and report any function calls that may
 cause Erlang source code to be insecure.
 

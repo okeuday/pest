@@ -1,0 +1,14 @@
+language: erlang
+otp_release:
+  - 19.0
+  - 18.3
+script: ./pest.erl -v -c ./pest.erl
+branches:
+  only:
+    - master
+notifications:
+  irc:
+    channels:
+      - "chat.freenode.net#cloudi"
+    on_success: change
+    on_failure: always
