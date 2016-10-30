@@ -347,9 +347,9 @@ main_arguments([], FilePaths, Directories,
         Recursive =:= true ->
             RegExp = if
                 BeamOnly =:= true ->
-                    ".*\.beam$";
+                    ".*\\.beam$";
                 SourceOnly =:= true ->
-                    ".*\.erl$";
+                    ".*\\.erl$";
                 true ->
                     ".*"
             end,
