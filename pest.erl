@@ -229,14 +229,11 @@ analyze(FilePath, Options) ->
             WarningsN = erl_syntax_lib:fold(fun(TreeNode, Warnings1) ->
                 case TreeNode of
                     #'call'{function = #'remote'{anno = Anno,
-                                                 module = Module,
-                                                 function_name = Function},
+                                                 module = {atom, _, M},
+                                                 function_name = {atom, _, F}},
                             args = Args} ->
-                        Call = {erl_parse:normalise(Module),
-                                erl_parse:normalise(Function),
-                                length(Args)},
                         Line = erl_anno:line(Anno),
-                        analyze_checks(Warnings1, Line, Call);
+                        analyze_checks(Warnings1, Line, {M, F, length(Args)});
                     _ ->
                         Warnings1
                 end
