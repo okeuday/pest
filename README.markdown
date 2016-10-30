@@ -33,7 +33,7 @@ option to provide the `abstract_code` used by pest.erl.  However, pest.erl
 also consumes Erlang source code, including escript files.
 
 Please feel free to contribute!  To add security problems to the scan
-insert information into the [list of checks](https://github.com/okeuday/pest/blob/master/pest.erl#L122-L186).
+insert information into the [list of checks](https://github.com/okeuday/pest/blob/master/pest.erl#L122-L216).
 
 Test
 ----
