@@ -615,9 +615,10 @@ version_info_openssl(VersionRuntime) ->
             erlang:binary_to_list(VersionMinor),
             [PatchNumber]},
     SecurityProblemsList = [
-    % based on https://en.wikipedia.org/wiki/OpenSSL#Notable_vulnerabilities
-    if Fork < {"0", "9", "8"} ->
+    % based on https://en.wikipedia.org/wiki/OpenSSL#Major_version_releases
+    if Fork =< {"1", "0", "0"} ->
         "OLD OpenSSL!"; true -> "" end,
+    % based on https://en.wikipedia.org/wiki/OpenSSL#Notable_vulnerabilities
     if Fork == {"0", "9", "7"}, Patch =< "a" ->
         "CAN-2003-0147"; true -> "" end, % Timing attacks on RSA Keys
     if Fork == {"0", "9", "7"}, Patch =< "b" ->
