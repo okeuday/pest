@@ -44,6 +44,10 @@ To have pest.erl check itself, use:
 
     ./pest.erl -v -c ./pest.erl
 
+To check version information related to Erlang/OTP crypto, use:
+
+    ./pest.erl -V crypto
+
 Author
 ------
 
