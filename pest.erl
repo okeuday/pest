@@ -43,11 +43,11 @@
 %%% OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 %%% DAMAGE.
 %%%
-%%% @version 0.1.0 {@date} {@time}
+%%% @version 0.2.0 {@date} {@time}
 %%%------------------------------------------------------------------------
 
 -module(pest).
--vsn("0.1.0").
+-vsn("0.2.0").
 
 -mode(compile).
 
