@@ -687,7 +687,7 @@ version_info_crypto() ->
     end, crypto:info_lib()).
 
 version_info_pest() ->
-    Version = case pest:module_info(attributes) of
+    Version = case ?MODULE:module_info(attributes) of
         [] ->
             "UNKNOWN!";
         Attributes ->
