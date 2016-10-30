@@ -30,9 +30,10 @@ is provided with the `-h` command line argument, with the output shown below:
 Erlang/OTP version 19.0 and higher is required.
 If beam files are used, they must have been compiled with the `debug_info`
 option to provide the `abstract_code` used by pest.erl.  However, pest.erl
-also consumes Erlang source code, including escript files.  If beam files are
-available, it is best to use the beam files with pest.erl due to how the
-Erlang compiler preprocessor and optimizations can influence function calls.
+also consumes Erlang source code, including Erlang source escript files.
+If beam files are available, it is best to use the beam files with pest.erl
+due to how the Erlang compiler preprocessor and optimizations can influence
+function calls.
 
 Please feel free to contribute!  To add security problems to the scan
 insert information into the [list of checks](https://github.com/okeuday/pest/blob/master/pest.erl#L122-L216).
