@@ -670,8 +670,9 @@ version_info_crypto() ->
                  LibrarySource,
                  SecurityProblems} = version_info_openssl(VersionRuntime),
                 io:format("OpenSSL version information:~n"
-                          "    openssl/opensslv.h version ~w~n"
-                          "    runtime version ~s~n"
+                          "    crypto compile-time "
+                              "openssl/opensslv.h version ~w~n"
+                          "    crypto run-time version ~s~n"
                           "    ~w/~w problems found (~s)~n"
                           "    ~p~n",
                           [VersionHeader, VersionRuntime,
