@@ -300,14 +300,16 @@ main_arguments(Arguments) ->
 main_arguments(["-b" | Arguments], FilePaths, Directories,
                #state{input_source_only = false} = State) ->
     main_arguments(Arguments, FilePaths, Directories,
-                   State#state{input_beam_only = true});
+                   State#state{input_beam_only = true,
+                               recursive = true});
 main_arguments(["-c" | Arguments], FilePaths, Directories, State) ->
     main_arguments(Arguments, FilePaths, Directories,
                    State#state{consistency_checks = true});
 main_arguments(["-e" | Arguments], FilePaths, Directories,
                #state{input_beam_only = false} = State) ->
     main_arguments(Arguments, FilePaths, Directories,
-                   State#state{input_source_only = true});
+                   State#state{input_source_only = true,
+                               recursive = true});
 main_arguments(["-h" | _], _, _, _) ->
     io:format(help(), [filename:basename(escript:script_name())]),
     exit_code(0);
