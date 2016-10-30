@@ -24,8 +24,8 @@ is provided with the `-h` command line argument, with the output shown below:
                       (default is 50)
       -v              Verbose output (set the minimum severity to 0)
     
-Please feel free to contribute, to add security problems to the scan
-(just insert into the [list of checks](https://github.com/okeuday/pest/blob/3b63e573daa458c68f23a717a4c2168a2e430da3/pest.erl#L122-L185)).
+Please feel free to contribute!  To add security problems to the scan
+insert information into the [list of checks](https://github.com/okeuday/pest/blob/3b63e573daa458c68f23a717a4c2168a2e430da3/pest.erl#L122-L185).
 
 Test
 ----
