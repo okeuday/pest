@@ -362,6 +362,24 @@ main_arguments(["-s", SeverityMin | Arguments],
 main_arguments(["-v" | Arguments], FilePaths, Directories, State) ->
     main_arguments(Arguments, FilePaths, Directories,
                    State#state{severity_min = 0});
+main_arguments(["-V" | Arguments], _, _, _) ->
+    Component = case Arguments of
+        [] ->
+            "pest";
+        ["-" ++ _ | _] ->
+            "pest";
+        [ComponentName | _] ->
+            ComponentName
+    end,
+    case Component of
+        "pest" ->
+            version_info_pest();
+        "crypto" ->
+            version_info_crypto();
+        _ ->
+            erlang:error({invalid_component, Component})
+    end,
+    exit_code(0);
 main_arguments(["-" ++ InvalidParameter | _], _, _, _) ->
     erlang:error({invalid_parameter, InvalidParameter});
 main_arguments([Path | Arguments], FilePaths, Directories, State) ->
@@ -589,6 +607,104 @@ function_exists(M, F, A) ->
 exit_code(ExitCode) when is_integer(ExitCode) ->
     erlang:halt(ExitCode, [{flush, true}]).
 
+version_info_openssl(VersionRuntime) ->
+    [<<"OpenSSL">>, VersionMajor, VersionMinor, VersionPatch |
+     _] = binary:split(VersionRuntime, [<<" ">>, <<".">>], [global]),
+    [PatchNumber | Patch] = erlang:binary_to_list(VersionPatch),
+    Fork = {erlang:binary_to_list(VersionMajor),
+            erlang:binary_to_list(VersionMinor),
+            [PatchNumber]},
+    SecurityProblemsList = [
+    % based on https://en.wikipedia.org/wiki/OpenSSL#Notable_vulnerabilities
+    if Fork < {"0", "9", "8"} ->
+        "OLD OpenSSL!"; true -> "" end,
+    if Fork == {"0", "9", "7"}, Patch =< "a" ->
+        "CAN-2003-0147"; true -> "" end, % Timing attacks on RSA Keys
+    if Fork == {"0", "9", "7"}, Patch =< "b" ->
+        "CAN-2003-054[345]"; true -> "" end, % Denial of Service ASN.1 parsing
+    if Fork == {"0", "9", "8"}, Patch < "g-9" ->
+        "CVE-2008-0166"; true -> "" end, % Predictable private keys (Debian)
+    if Fork == {"0", "9", "8"}, Patch >= "h", Patch =< "q";
+       Fork == {"1", "0", "0"}, Patch =< "c" ->
+        "CVE-2011-0014"; true -> "" end, % OCSP stapling vulnerability
+    if Fork == {"0", "9", "8"}, Patch < "v";
+       Fork == {"1", "0", "0"}, Patch < "i";
+       Fork == {"1", "0", "1"}, Patch < "a" ->
+        "CVE-2012-2110"; true -> "" end, % ASN.1 BIO vulnerability
+    if Fork == {"0", "9", "8"}, Patch < "y";
+       Fork == {"1", "0", "0"}, Patch < "k";
+       Fork == {"1", "0", "1"}, Patch < "e" ->
+        "CVE-2013-0169"; true -> "" end, % SSL, TLS and DTLS Plaintext Recovery
+    if Fork == {"1", "0", "1"}, Patch < "g" ->
+        "CVE-2014-0160"; true -> "" end, % Heartbleed
+    if Fork == {"0", "9", "8"}, Patch < "za";
+       Fork == {"1", "0", "0"}, Patch < "m";
+       Fork == {"1", "0", "1"}, Patch < "h" ->
+        "CVE-2014-0224"; true -> "" end, % SSL/TLS MITM vulnerability
+    if Fork == {"0", "9", "8"}, Patch < "zd";
+       Fork == {"1", "0", "0"}, Patch < "p";
+       Fork == {"1", "0", "1"}, Patch < "k" ->
+        "CVE-2015-0291"; true -> "" end, % ClientHello sigalgs DoS
+    if Fork == {"1", "0", "2"}, Patch < "f" ->
+        "CVE-2016-0701"; true -> "" end % Diffie Hellman small subgroups
+    ],
+    LibrarySource = if
+        Patch == "" ->
+            "package manager fork?";
+        true ->
+            "openssl mainline!"
+    end,
+    SecurityProblems = lists:filter(fun(S) ->
+        S /= ""
+    end, SecurityProblemsList),
+    {length(SecurityProblems), length(SecurityProblemsList),
+     LibrarySource, SecurityProblems}.
+
+version_info_crypto() ->
+    {ok, _} = application:ensure_all_started(crypto),
+    lists:foreach(fun(CryptoComponent) ->
+        case CryptoComponent of
+            {<<"OpenSSL">>, VersionHeader, VersionRuntime} ->
+                {SecurityProblemsFound,
+                 SecurityProblemsKnown,
+                 LibrarySource,
+                 SecurityProblems} = version_info_openssl(VersionRuntime),
+                io:format("OpenSSL version information:~n"
+                          "    openssl/opensslv.h version ~w~n"
+                          "    runtime version ~s~n"
+                          "    ~w/~w problems found (~s)~n"
+                          "    ~p~n",
+                          [VersionHeader, VersionRuntime,
+                           SecurityProblemsFound,
+                           SecurityProblemsKnown,
+                           LibrarySource,
+                           SecurityProblems]);
+            Other ->
+                io:format("~p (crypto dependency unknown)~n", [Other])
+        end
+    end, crypto:info_lib()).
+
+version_info_pest() ->
+    Version = case pest:module_info(attributes) of
+        [] ->
+            "UNKNOWN!";
+        Attributes ->
+            VersionListN = lists:foldr(fun(Attribute, VersionList0) ->
+                case Attribute of
+                    {vsn, VSN} ->
+                        VSN ++ VersionList0;
+                    _ ->
+                        VersionList0
+                end
+            end, [], Attributes),
+            io_lib:format("~p", [VersionListN])
+    end,
+    {ok, Data} = file:read_file(?FILE),
+    FileHash = erlang:phash2(Data),
+    io:format("~s version ~s (~w)~n",
+              [filename:basename(escript:script_name()),
+               Version, FileHash]).
+
 help() ->
 "Usage ~s [OPTION] [FILES] [DIRECTORIES]
 
@@ -600,5 +716,7 @@ help() ->
   -s SEVERITY     Set the minimum severity to use when reporting problems
                   (default is 50)
   -v              Verbose output (set the minimum severity to 0)
+  -V [COMPONENT]  Print version information
+                  (valid components are: pest, crypto)
 ".
 
