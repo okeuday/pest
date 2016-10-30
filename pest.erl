@@ -342,10 +342,7 @@ main_arguments([], FilePaths, Directories,
                       input_source_only = SourceOnly,
                       recursive = Recursive} = State) ->
     FilePathsFoundN = if
-        Recursive =:= false,
-        (Directories /= []) orelse
-        (BeamOnly =:= true) orelse
-        (SourceOnly =:= true) ->
+        Recursive =:= false, Directories /= [] ->
             erlang:error(not_recursive);
         Recursive =:= true ->
             RegExp = if
