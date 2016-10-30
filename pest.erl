@@ -401,14 +401,14 @@ main_warnings_display(Warnings) ->
         lists:foreach(fun({FilePath, ProblemsOutputN}) ->
             FileName = filename:basename(FilePath),
             lists:foreach(fun({ProblemName, Lines}) ->
-                case Lines of
+                FileLines = case Lines of
                     [Line] ->
-                        io:format("~-5s~s:~w (~s)~n",
-                                  ["", FileName, Line, ProblemName]);
+                        Line;
                     [_ | _] ->
-                        io:format("~-5s~s:~p (~s)~n",
-                                  ["", FileName, Lines, ProblemName])
-                end
+                        Lines
+                end,
+                io:format("~-5s~s:~w (~s)~n",
+                          ["", FileName, FileLines, ProblemName])
             end, ProblemsOutputN)
         end, FileOutputN)
     end, OutputN).
