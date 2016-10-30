@@ -203,7 +203,9 @@ checks() ->
        snmpm,
        % encrypt_debug_info option usage
        {compile, file, 2},
-       {compile, forms, 2}],
+       {compile, forms, 2},
+       {compile, noenv_file, 2},
+       {compile, noenv_forms, 2}],
       "Keep OpenSSL updated for crypto module use"},
      {10,
       [{erlang, list_to_atom, 1},
