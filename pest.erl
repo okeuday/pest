@@ -458,7 +458,7 @@ warnings_format(#warnings{checks_lookup = ChecksLookup,
                  Output0)
     end, #{}, Instances),
     lists:reverse(maps:fold(fun({Severity, Message}, Problems, L) ->
-        lists:ukeymerge(1, L, [{Severity, Message, Problems}])
+        lists:umerge(L, [{Severity, Message, Problems}])
     end, [], OutputN)).
 
 -spec consistency_checks(Checks :: any()) ->
