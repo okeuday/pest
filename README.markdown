@@ -26,6 +26,7 @@ is provided with the `-h` command line argument, with the output shown below:
                       (default is 50)
       -v              Verbose output (set the minimum severity to 0)
     
+Erlang/OTP version 19.0 and higher is required.
 If beam files are used, they must have been compiled with the `debug_info`
 option to provide the `abstract_code` used by pest.erl.  However, pest.erl
 also consumes Erlang source code, including escript files.
