@@ -26,6 +26,8 @@ is provided with the `-h` command line argument, with the output shown below:
       -r              Recursively search directories
       -s SEVERITY     Set the minimum severity to use when reporting problems
                       (default is 50)
+      -U COMPONENT    Update local data related to a component
+                      (valid components are: crypto)
       -v              Verbose output (set the minimum severity to 0)
       -V [COMPONENT]  Print version information
                       (valid components are: pest, crypto)

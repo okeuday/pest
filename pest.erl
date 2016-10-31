@@ -366,8 +366,7 @@ main_arguments(["-h" | _], _, _, _) ->
     io:format(help(), [filename:basename(escript:script_name())]),
     exit_code(0);
 main_arguments(["-m", ApplicationName | _], _, _, _) ->
-    ModuleIndirection = erlang,
-    Application = ModuleIndirection:list_to_atom(ApplicationName),
+    Application = erlang:list_to_atom(ApplicationName),
     case application:load(Application) of
         ok ->
             {ok, Modules} = application:get_key(Application, modules),
@@ -394,6 +393,19 @@ main_arguments(["-s", SeverityMin | Arguments],
     end,
     main_arguments(Arguments, FilePaths, Directories,
                    State#state{severity_min = SeverityMinValue});
+main_arguments(["-U", Component | _], _, _, _) ->
+    case Component of
+        "crypto" ->
+            case update_crypto_data() of
+                ok ->
+                    ok;
+                {error, Reason} ->
+                    erlang:error({update_failed, Reason})
+            end;
+        _ ->
+            erlang:error({invalid_component, Component})
+    end,
+    exit_code(0);
 main_arguments(["-v" | Arguments], FilePaths, Directories, State) ->
     main_arguments(Arguments, FilePaths, Directories,
                    State#state{severity_min = 0});
@@ -642,48 +654,134 @@ function_exists(M, F, A) ->
 exit_code(ExitCode) when is_integer(ExitCode) ->
     erlang:halt(ExitCode, [{flush, true}]).
 
+pest_data_file() ->
+    filename:join([filename:dirname(escript:script_name()), "pest.dat"]).
+
+pest_data_find(Key) ->
+    FilePath = pest_data_file(),
+    case file:consult(FilePath) of
+        {ok, [Data]} ->
+            case lists:keyfind(Key, 1, Data) of
+                {Key, Value} ->
+                    {ok, Value};
+                false ->
+                    error
+            end;
+        {error, enoent} ->
+            error
+    end.
+
+pest_data_store(Key, Value) ->
+    FilePath = pest_data_file(),
+    DataNew = case file:consult(FilePath) of
+        {ok, [DataOld]} ->
+            lists:keystore(Key, 1, DataOld, {Key, Value});
+        {error, enoent} ->
+            [{Key, Value}]
+    end,
+    file:write_file(FilePath, io_lib:format("~p.", [DataNew]), [raw]).
+
+update_crypto_data() ->
+    % webscraper for OpenSSL Vulnerabilities
+    URL = "https://www.openssl.org/news/vulnerabilities.html",
+    Timeout = 20000, % milliseconds
+    error_logger:tty(false),
+    ok = ssl:start(),
+    ok = inets:start(),
+    Result = case httpc:request(get, {URL, []},
+                                [{autoredirect, false},
+                                 {timeout, Timeout}],
+                                [{body_format, string}]) of
+        {ok, {{_, 200, "OK"}, _Headers, Body}} ->
+            {ok, Vulnerabilities} = update_crypto_openssl_data_parse(Body, []),
+            pest_data_store(crypto, [{openssl, Vulnerabilities}]);
+        {ok, RequestFailed} ->
+            {error, RequestFailed};
+        {error, _} = Error ->
+            Error
+    end,
+    ok = inets:stop(),
+    ok = ssl:stop(),
+    error_logger:tty(true),
+    Result.
+
+update_crypto_openssl_data_parse("CVE-" ++ _ = L0, D) ->
+    {CVE, LN} = lists:split(13, L0),
+    update_crypto_openssl_data_parse_cve(LN, moderate, CVE, D);
+update_crypto_openssl_data_parse([], D) ->
+    {ok, D};
+update_crypto_openssl_data_parse([_ | L], D) ->
+    update_crypto_openssl_data_parse(L, D).
+
+update_crypto_openssl_data_parse_cve("[Critical severity]" ++ L, _, CVE, D) ->
+    update_crypto_openssl_data_parse_cve(L, critical, CVE, D);
+update_crypto_openssl_data_parse_cve("[High severity]" ++ L, _, CVE, D) ->
+    update_crypto_openssl_data_parse_cve(L, high, CVE, D);
+update_crypto_openssl_data_parse_cve("[Moderate severity]" ++ L, _, CVE, D) ->
+    update_crypto_openssl_data_parse_cve(L, moderate, CVE, D);
+update_crypto_openssl_data_parse_cve("[Low severity]" ++ L, _, CVE, D) ->
+    update_crypto_openssl_data_parse_cve(L, low, CVE, D);
+update_crypto_openssl_data_parse_cve("Fixed in OpenSSL " ++ L0,
+                                     Level, CVE, D) ->
+    Version = fun(V) ->
+        (V >= $0 andalso V =< $9) orelse (V == $.) orelse
+        (V >= $a andalso V =< $z)
+    end,
+    {_, L1} = lists:splitwith(fun(C0) -> not Version(C0) end, L0),
+    {Fix, LN} = lists:splitwith(fun(C1) -> Version(C1) end, L1),
+    update_crypto_openssl_data_parse_cve_fix(LN, Fix, Level, CVE, D);
+update_crypto_openssl_data_parse_cve(">CVE-" ++ _ = L, _, _, D) ->
+    update_crypto_openssl_data_parse(L, D);
+update_crypto_openssl_data_parse_cve([], _, _, D) ->
+    {ok, D};
+update_crypto_openssl_data_parse_cve([_ | L], Level, CVE, D) ->
+    update_crypto_openssl_data_parse_cve(L, Level, CVE, D).
+
+update_crypto_openssl_data_parse_cve_fix("(Affected " ++ L0,
+                                         Fix, Level, CVE, D) ->
+    {Affected, LN} = lists:splitwith(fun(C0) -> C0 /= $) end, L0),
+    AffectedList = string:tokens(Affected, ", "),
+    Entry = {CVE, Level, Fix, AffectedList},
+    update_crypto_openssl_data_parse_cve(LN, Level, CVE, [Entry | D]);
+update_crypto_openssl_data_parse_cve_fix(">CVE-" ++ _ = L, _, _, _, D) ->
+    update_crypto_openssl_data_parse(L, D);
+update_crypto_openssl_data_parse_cve_fix([], _, _, _, D) ->
+    {ok, D};
+update_crypto_openssl_data_parse_cve_fix([_ | L], Fix, Level, CVE, D) ->
+    update_crypto_openssl_data_parse_cve_fix(L, Fix, Level, CVE, D).
+
 version_info_openssl(VersionRuntime) ->
     [<<"OpenSSL">>, VersionMajor, VersionMinor, VersionPatch |
      _] = binary:split(VersionRuntime, [<<" ">>, <<".">>], [global]),
+    Version = erlang:binary_to_list(<<VersionMajor/binary, $.,
+                                      VersionMinor/binary, $.,
+                                      VersionPatch/binary>>),
     [PatchNumber | Patch] = erlang:binary_to_list(VersionPatch),
     Fork = {erlang:binary_to_list(VersionMajor),
             erlang:binary_to_list(VersionMinor),
             [PatchNumber]},
+    {ok, [{openssl, Vulnerabilities}]} = pest_data_find(crypto),
     SecurityProblemsList = [
     % based on https://en.wikipedia.org/wiki/OpenSSL#Major_version_releases
     if Fork =< {"1", "0", "0"} ->
         "OLD OpenSSL!"; true -> "" end,
     % based on https://en.wikipedia.org/wiki/OpenSSL#Notable_vulnerabilities
+    % without https://www.openssl.org/news/vulnerabilities.html
     if Fork == {"0", "9", "7"}, Patch =< "a" ->
         "CAN-2003-0147"; true -> "" end, % Timing attacks on RSA Keys
     if Fork == {"0", "9", "7"}, Patch =< "b" ->
         "CAN-2003-054[345]"; true -> "" end, % Denial of Service ASN.1 parsing
     if Fork == {"0", "9", "8"}, Patch < "g-9" ->
-        "CVE-2008-0166"; true -> "" end, % Predictable private keys (Debian)
-    if Fork == {"0", "9", "8"}, Patch >= "h", Patch =< "q";
-       Fork == {"1", "0", "0"}, Patch =< "c" ->
-        "CVE-2011-0014"; true -> "" end, % OCSP stapling vulnerability
-    if Fork == {"0", "9", "8"}, Patch < "v";
-       Fork == {"1", "0", "0"}, Patch < "i";
-       Fork == {"1", "0", "1"}, Patch < "a" ->
-        "CVE-2012-2110"; true -> "" end, % ASN.1 BIO vulnerability
-    if Fork == {"0", "9", "8"}, Patch < "y";
-       Fork == {"1", "0", "0"}, Patch < "k";
-       Fork == {"1", "0", "1"}, Patch < "e" ->
-        "CVE-2013-0169"; true -> "" end, % SSL, TLS and DTLS Plaintext Recovery
-    if Fork == {"1", "0", "1"}, Patch < "g" ->
-        "CVE-2014-0160"; true -> "" end, % Heartbleed
-    if Fork == {"0", "9", "8"}, Patch < "za";
-       Fork == {"1", "0", "0"}, Patch < "m";
-       Fork == {"1", "0", "1"}, Patch < "h" ->
-        "CVE-2014-0224"; true -> "" end, % SSL/TLS MITM vulnerability
-    if Fork == {"0", "9", "8"}, Patch < "zd";
-       Fork == {"1", "0", "0"}, Patch < "p";
-       Fork == {"1", "0", "1"}, Patch < "k" ->
-        "CVE-2015-0291"; true -> "" end, % ClientHello sigalgs DoS
-    if Fork == {"1", "0", "2"}, Patch < "f" ->
-        "CVE-2016-0701"; true -> "" end % Diffie Hellman small subgroups
-    ],
+        "CVE-2008-0166"; true -> "" end % Predictable private keys (Debian)
+    ] ++
+    lists:map(fun({CVE, _Level, _Fix, Affected}) ->
+        case lists:member(Version, Affected) of
+            true ->
+                CVE;
+            false ->
+                ""
+        end
+    end, Vulnerabilities),
     LibrarySource = if
         Patch == "" ->
             "package manager fork?";
@@ -753,6 +851,8 @@ help() ->
   -r              Recursively search directories
   -s SEVERITY     Set the minimum severity to use when reporting problems
                   (default is 50)
+  -U COMPONENT    Update local data related to a component
+                  (valid components are: crypto)
   -v              Verbose output (set the minimum severity to 0)
   -V [COMPONENT]  Print version information
                   (valid components are: pest, crypto)
