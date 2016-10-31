@@ -394,16 +394,17 @@ main_arguments(["-s", SeverityMin | Arguments],
     main_arguments(Arguments, FilePaths, Directories,
                    State#state{severity_min = SeverityMinValue});
 main_arguments(["-U", Component | _], _, _, _) ->
-    case Component of
+    Update = case Component of
         "crypto" ->
-            case update_crypto_data() of
-                ok ->
-                    ok;
-                {error, Reason} ->
-                    erlang:error({update_failed, Reason})
-            end;
+            update_crypto_data();
         _ ->
             erlang:error({invalid_component, Component})
+    end,
+    case Update of
+        ok ->
+            ok;
+        {error, Reason} ->
+            erlang:error({update_failed, Reason})
     end,
     exit_code(0);
 main_arguments(["-v" | Arguments], FilePaths, Directories, State) ->
@@ -768,7 +769,12 @@ version_info_openssl(VersionRuntime) ->
     Fork = {erlang:binary_to_list(VersionMajor),
             erlang:binary_to_list(VersionMinor),
             PatchNumber},
-    {ok, [{openssl, Vulnerabilities}]} = pest_data_find(crypto),
+    Vulnerabilities = case pest_data_find(crypto) of
+        {ok, [{openssl, VulnerabilitiesData}]} ->
+            VulnerabilitiesData;
+        error ->
+            []
+    end,
     SecurityProblemsList = [
         if
             % based on
