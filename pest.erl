@@ -217,7 +217,15 @@ checks() ->
       [{erlang, list_to_atom, 1},
        {erlang, binary_to_atom, 2},
        {erlang, binary_to_term, 1},
-       {file, consult, 1}] ++
+       {file, consult, 1},
+       {file, eval, 1},
+       {file, eval, 2},
+       {file, path_consult, 2},
+       {file, path_eval, 2},
+       {file, path_script, 2},
+       {file, path_script, 3},
+       {file, script, 1},
+       {file, script, 2}] ++
        % application modules: xmerl (with "-m xmerl")
 [xmerl,xmerl_b64Bin,xmerl_b64Bin_scan,xmerl_eventp,xmerl_html,xmerl_lib,
  xmerl_otpsgml,xmerl_regexp,xmerl_sax_old_dom,xmerl_sax_parser,
