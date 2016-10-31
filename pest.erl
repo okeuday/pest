@@ -756,10 +756,12 @@ version_info_openssl(VersionRuntime) ->
     Version = erlang:binary_to_list(<<VersionMajor/binary, $.,
                                       VersionMinor/binary, $.,
                                       VersionPatch/binary>>),
-    [PatchNumber | Patch] = erlang:binary_to_list(VersionPatch),
+    {PatchNumber, PatchString} = lists:splitwith(fun(C) ->
+        (C >= $0) andalso (C =< $9)
+    end, erlang:binary_to_list(VersionPatch)),
     Fork = {erlang:binary_to_list(VersionMajor),
             erlang:binary_to_list(VersionMinor),
-            [PatchNumber]},
+            PatchNumber},
     {ok, [{openssl, Vulnerabilities}]} = pest_data_find(crypto),
     SecurityProblemsList = [
     % based on https://en.wikipedia.org/wiki/OpenSSL#Major_version_releases
@@ -767,11 +769,11 @@ version_info_openssl(VersionRuntime) ->
         "OLD OpenSSL!"; true -> "" end,
     % based on https://en.wikipedia.org/wiki/OpenSSL#Notable_vulnerabilities
     % without https://www.openssl.org/news/vulnerabilities.html
-    if Fork == {"0", "9", "7"}, Patch =< "a" ->
+    if Fork == {"0", "9", "7"}, PatchString =< "a" ->
         "CAN-2003-0147"; true -> "" end, % Timing attacks on RSA Keys
-    if Fork == {"0", "9", "7"}, Patch =< "b" ->
+    if Fork == {"0", "9", "7"}, PatchString =< "b" ->
         "CAN-2003-054[345]"; true -> "" end, % Denial of Service ASN.1 parsing
-    if Fork == {"0", "9", "8"}, Patch < "g-9" ->
+    if Fork == {"0", "9", "8"}, PatchString < "g-9" ->
         "CVE-2008-0166"; true -> "" end % Predictable private keys (Debian)
     ] ++
     lists:map(fun({CVE, _Level, _Fix, Affected}) ->
@@ -783,7 +785,7 @@ version_info_openssl(VersionRuntime) ->
         end
     end, Vulnerabilities),
     LibrarySource = if
-        Patch == "" ->
+        PatchString == "" ->
             "package manager fork?";
         true ->
             "openssl mainline!"
