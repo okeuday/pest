@@ -759,37 +759,35 @@ version_info_openssl(VersionRuntime) ->
     {PatchNumber, PatchString} = lists:splitwith(fun(C) ->
         (C >= $0) andalso (C =< $9)
     end, erlang:binary_to_list(VersionPatch)),
-    Fork = {erlang:binary_to_list(VersionMajor),
-            erlang:binary_to_list(VersionMinor),
-            PatchNumber},
-    {ok, [{openssl, Vulnerabilities}]} = pest_data_find(crypto),
-    SecurityProblemsList = [
-    % based on https://en.wikipedia.org/wiki/OpenSSL#Major_version_releases
-    if Fork =< {"1", "0", "0"} ->
-        "OLD OpenSSL!"; true -> "" end,
-    % based on https://en.wikipedia.org/wiki/OpenSSL#Notable_vulnerabilities
-    % without https://www.openssl.org/news/vulnerabilities.html
-    if Fork == {"0", "9", "7"}, PatchString =< "a" ->
-        "CAN-2003-0147"; true -> "" end, % Timing attacks on RSA Keys
-    if Fork == {"0", "9", "7"}, PatchString =< "b" ->
-        "CAN-2003-054[345]"; true -> "" end, % Denial of Service ASN.1 parsing
-    if Fork == {"0", "9", "8"}, PatchString < "g-9" ->
-        "CVE-2008-0166"; true -> "" end % Predictable private keys (Debian)
-    ] ++
-    lists:map(fun({CVE, _Level, _Fix, Affected}) ->
-        case lists:member(Version, Affected) of
-            true ->
-                CVE;
-            false ->
-                ""
-        end
-    end, Vulnerabilities),
     LibrarySource = if
         PatchString == "" ->
             "package manager fork?";
         true ->
             "openssl mainline!"
     end,
+    Fork = {erlang:binary_to_list(VersionMajor),
+            erlang:binary_to_list(VersionMinor),
+            PatchNumber},
+    {ok, [{openssl, Vulnerabilities}]} = pest_data_find(crypto),
+    SecurityProblemsList = [
+        if
+            % based on
+            % https://en.wikipedia.org/wiki/OpenSSL#Major_version_releases
+            Fork =< {"1", "0", "0"} ->
+                "OLD OpenSSL!";
+            true ->
+                ""
+        end |
+        lists:map(fun({CVE, Level, _Fix, Affected}) ->
+            case lists:member(Version, Affected) of
+                true ->
+                    CVE ++
+                    "(" ++ string:to_upper(erlang:atom_to_list(Level)) ++ ")";
+                false ->
+                    ""
+            end
+        end, Vulnerabilities)
+    ],
     SecurityProblems = lists:filter(fun(S) ->
         S /= ""
     end, SecurityProblemsList),
