@@ -212,7 +212,7 @@ checks() ->
        {compile, forms, 2},
        {compile, noenv_file, 2},
        {compile, noenv_forms, 2}],
-      "Keep OpenSSL updated for crypto module use"},
+      "Keep OpenSSL updated for crypto module use (run with \"-V crypto\")"},
      {10,
       [{erlang, list_to_atom, 1},
        {erlang, binary_to_atom, 2},
@@ -363,7 +363,7 @@ main_arguments(["-e" | Arguments], FilePaths, Directories,
                    State#state{input_source_only = true,
                                recursive = true});
 main_arguments(["-h" | _], _, _, _) ->
-    io:format(help(), [filename:basename(escript:script_name())]),
+    io:format(help(), [filename:basename(?FILE)]),
     exit_code(0);
 main_arguments(["-m", ApplicationName | _], _, _, _) ->
     Application = erlang:list_to_atom(ApplicationName),
@@ -656,7 +656,8 @@ exit_code(ExitCode) when is_integer(ExitCode) ->
     erlang:halt(ExitCode, [{flush, true}]).
 
 pest_data_file() ->
-    filename:join([filename:dirname(escript:script_name()), "pest.dat"]).
+    filename:join([filename:dirname(?FILE),
+                   "priv", "pest.dat"]).
 
 pest_data_find(Key) ->
     FilePath = pest_data_file(),
@@ -707,7 +708,11 @@ update_crypto_data() ->
     Result.
 
 update_crypto_openssl_data_parse("CVE-" ++ _ = L0, D) ->
-    {CVE, LN} = lists:split(13, L0),
+    {CVE, LN} = lists:splitwith(fun(C0) ->
+        (C0 >= $A andalso C0 =< $Z) orelse
+        (C0 >= $0 andalso C0 =< $9) orelse
+        (C0 == $-)
+    end, L0),
     update_crypto_openssl_data_parse_cve(LN, moderate, CVE, D);
 update_crypto_openssl_data_parse([], D) ->
     {ok, D};
@@ -843,7 +848,7 @@ version_info_pest() ->
     {ok, Data} = file:read_file(?FILE),
     FileHash = erlang:phash2(Data),
     io:format("~s version ~s (~w)~n",
-              [filename:basename(escript:script_name()),
+              [filename:basename(?FILE),
                Version, FileHash]).
 
 help() ->
