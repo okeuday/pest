@@ -769,7 +769,9 @@ provided below:
          xmerl_xsd_type.beam:[809,813,852,862,871,898,908,917,942,952,961,986,996,1005] (xmerl_xsd_type:_/_)
 
 Module usage like the xmerl application using xmerl modules is redundant, but
-the output also shows indirect problems that you may not have been aware of.
+the output may be used to understand how Erlang source code could have
+security problems that are not reported by the pest.erl script when it is ran
+on the Erlang source code (due to an indirect function call).
 
 Author
 ------
