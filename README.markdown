@@ -43,6 +43,18 @@ function calls.
 Please feel free to contribute!  To add security problems to the scan
 insert information into the [list of checks](https://github.com/okeuday/pest/blob/master/pest.erl#L122-L240).
 
+Usage
+-----
+
+To scan any `.beam` files in a `lib` directory recursively, use:
+
+    ./pest.erl -b path_to_somewhere/lib
+
+If you want to see all possible checks,
+just turn on the verbose output with `-v`:
+
+    ./pest.erl -v -b path_to_somewhere/lib
+
 Test
 ----
 
