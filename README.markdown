@@ -48,12 +48,16 @@ Usage
 
 To scan any `.beam` files in a `lib` directory recursively, use:
 
-    ./pest.erl -b path_to_somewhere/lib
+    ./pest.erl -b /path_to_somewhere/lib
 
 If you want to see all possible checks,
 just turn on the verbose output with `-v`:
 
-    ./pest.erl -v -b path_to_somewhere/lib
+    ./pest.erl -v -b /path_to_somewhere/lib
+
+To check version information related to Erlang/OTP crypto, use:
+
+    ./pest.erl -V crypto
 
 Test
 ----
@@ -61,10 +65,6 @@ Test
 To have pest.erl check itself, use:
 
     ./pest.erl -v -c ./pest.erl
-
-To check version information related to Erlang/OTP crypto, use:
-
-    ./pest.erl -V crypto
 
 Author
 ------
