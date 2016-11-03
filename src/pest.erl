@@ -281,7 +281,7 @@ checks_expand(FilePaths, 0, Checks) ->
     checks_expand(FilePaths, Checks);
 checks_expand(FilePaths, SeverityMin, Checks)
     when is_integer(SeverityMin),
-         SeverityMin >= 0, SeverityMin =< 100 ->
+         SeverityMin > 0, SeverityMin =< 100 ->
     NewChecks = lists:filter(fun({Severity, _, _}) ->
         Severity >= SeverityMin
     end, Checks),
