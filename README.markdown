@@ -20,8 +20,11 @@ is provided with the `-h` command line argument, with the output shown below:
     
       -b              Only process beam files recursively
       -c              Perform internal consistency checks
+      -d DEPENDENCY   Expand the checks to include a dependency
+                      (provide the dependency as a file path or directory)
       -e              Only process source files recursively
       -h              List available command line flags
+      -i              Display checks information after expanding dependencies
       -m APPLICATION  Display a list of modules in an Erlang/OTP application
       -r              Recursively search directories
       -s SEVERITY     Set the minimum severity to use when reporting problems
@@ -31,7 +34,7 @@ is provided with the `-h` command line argument, with the output shown below:
       -v              Verbose output (set the minimum severity to 0)
       -V [COMPONENT]  Print version information
                       (valid components are: pest, crypto)
-    
+
 Erlang/OTP version 19.0 and higher is required.
 If beam files are used, they must have been compiled with the `debug_info`
 option to provide the `abstract_code` used by pest.erl.  However, pest.erl
@@ -58,6 +61,10 @@ just turn on the verbose output with `-v`:
 To check version information related to Erlang/OTP crypto, use:
 
     ./pest.erl -V crypto
+
+To do a slower scan that includes indirect function calls from Erlang/OTP (as described in [Indirect Security Concerns](#indirect-security-concerns), use:
+
+    ./pest.erl -v -b -d /erlang_install_prefix/lib/erlang/lib/ /path_to_somewhere/lib
 
 Test
 ----
@@ -772,6 +779,12 @@ Module usage like the xmerl application using xmerl modules is redundant, but
 the output may be used to understand how Erlang source code could have
 security problems that are not reported by the pest.erl script when it is ran
 on the Erlang source code (due to an indirect function call).
+
+If you want to include indirect function calls in the security scan pest.erl
+performs, add each dependency that needs to be included in the scan with the
+`-d` command line argument.  If you need to examine the resulting checks
+after the dependencies are processed, but before the scan, add the `-i`
+command line argument to display all the checks.
 
 Author
 ------
