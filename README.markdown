@@ -785,7 +785,7 @@ performs, add each dependency that needs to be included in the scan with the
 `-d` command line argument.  If you need to examine the resulting checks
 after the dependencies are processed, but before the scan, add the `-i`
 command line argument to display all the checks.
-See [Usage](https://github.com/okeuday/pest/#usage)) for more information.
+See [Usage](https://github.com/okeuday/pest/#usage) for more information.
 
 Author
 ------
