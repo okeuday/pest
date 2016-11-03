@@ -99,7 +99,8 @@
         }).
 -record(warnings,
         {
-            checks_lookup :: #{problem() := list({severity(), message()})},
+            checks_lookup :: #{problem() := nonempty_list({severity(),
+                                                           message()})},
             function_calls = [] :: list({{Module :: module(),
                                           Function :: function_name(),
                                           Arity :: arity()},
