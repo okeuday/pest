@@ -778,7 +778,7 @@ provided below:
 Module usage like the xmerl application using xmerl modules is redundant, but
 the output may be used to understand how Erlang source code could have
 security problems that are not reported by the pest.erl script when it is ran
-on the Erlang source code (due to an indirect function call).
+on Erlang source code, due to an indirect function call.
 
 If you want to include indirect function calls in the security scan pest.erl
 performs, add each dependency that needs to be included in the scan with the
