@@ -72,7 +72,8 @@
 -type options() :: list(consistency_checks |
                         {checks, checks()} |
                         {severity_min, severity()} |
-                        {location, line | function}).
+                        {location, line | function} |
+                        {functions, remote | any}).
 -type location() :: line() |
                     {Function :: function_name(),
                      Arity :: arity()}.
