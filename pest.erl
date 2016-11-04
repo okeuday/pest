@@ -337,6 +337,7 @@ analyze(FilePath, Options) ->
     end,
     SeverityMin = proplists:get_value(severity_min, Options, 50),
     Location = proplists:get_value(location, Options, line),
+    Functions = proplists:get_value(functions, Options, remote),
     case abstract_forms(FilePath) of
         {ok, _} when not (is_integer(SeverityMin) andalso
                           (SeverityMin >= 0) andalso (SeverityMin =< 100)) ->
@@ -344,7 +345,12 @@ analyze(FilePath, Options) ->
         {ok, _} when not ((Location =:= line) orelse
                           (Location =:= function)) ->
             {error, location};
+        {ok, _} when not ((Functions =:= remote) orelse
+                          (Functions =:= any)) ->
+            {error, functions};
         {ok, Forms} ->
+            FileName = filename:rootname(filename:basename(FilePath)),
+            Module = erlang:list_to_existing_atom(FileName),
             ChecksLookup = checks_lookup(Checks, SeverityMin),
             Warnings0 = #warnings{checks_lookup = ChecksLookup},
             WarningsN = erl_syntax_lib:fold(fun(TreeNode, Warnings1) ->
@@ -352,15 +358,21 @@ analyze(FilePath, Options) ->
                     #'function'{function_name = F,
                                 arity = A} ->
                         analyze_checks(Warnings1, Location, {F, A});
-                    #'call'{function = #'remote'{anno = Anno,
-                                                 module = {atom, _, M},
+                    #'call'{anno = Anno,
+                            function = #'remote'{module = {atom, _, M},
                                                  function_name = {atom, _, F}},
                             args = Args} ->
-                        #warnings{function_calls = FunctionCalls} = Warnings1,
-                        NewFunctionCalls = [{{M, F, length(Args)},
-                                             erl_anno:line(Anno)} | 
-                                            FunctionCalls],
-                        Warnings1#warnings{function_calls = NewFunctionCalls};
+                        % remote function call
+                        analyze_store({M, F, length(Args)},
+                                      erl_anno:line(Anno), Warnings1);
+                    #'call'{anno = Anno,
+                            function = {atom, _, F},
+                            args = Args}
+                        when (Functions =:= any) ->
+                        % local function call
+                        % (necessary to expand checks)
+                        analyze_store({Module, F, length(Args)},
+                                      erl_anno:line(Anno), Warnings1);
                     _ ->
                         Warnings1
                 end
@@ -660,7 +672,8 @@ checks_expand_loop(FilePaths, ChecksOld) ->
     ChecksLookup0 = checks_lookup(ChecksOld, 0),
     Options = [{checks, ChecksOld},
                {severity_min, 0},
-               {location, function}],
+               {location, function},
+               {functions, any}],
     ChecksLookupN = lists:foldl(fun(FilePath, ChecksLookup1) ->
         FileName = filename:rootname(filename:basename(FilePath)),
         Module = erlang:list_to_atom(FileName),
@@ -708,6 +721,10 @@ checks_expand_loop(FilePaths, ChecksOld) ->
             checks_expand_loop(FilePaths, ChecksNewN)
     end.
 
+analyze_store(Call, Line,
+              #warnings{function_calls = FunctionCalls} = Warnings) ->
+    Warnings#warnings{function_calls = [{Call, Line} | FunctionCalls]}.
+    
 analyze_checks(#warnings{checks_lookup = ChecksLookup,
                          function_calls = FunctionCalls} = Warnings0,
                Location, CurrentFunction) ->
