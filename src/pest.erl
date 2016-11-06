@@ -606,7 +606,6 @@ main_arguments([], FilePaths0, Directories,
                            DependencyFilePathsFound,
     if
         FilePathsN == [],
-        DependencyFilePathsN == [],
         ChecksInfo =:= false ->
             io:format(help(), [filename:basename(?FILE)]),
             exit_code(1);
