@@ -569,7 +569,8 @@ main_arguments([], FilePaths0, Directories,
                DependencyFilePaths0, DependencyDirectories,
                #state{input_beam_only = BeamOnly,
                       input_source_only = SourceOnly,
-                      recursive = Recursive} = State) ->
+                      recursive = Recursive,
+                      checks_info = ChecksInfo} = State) ->
     {FilePathsFound,
      DependencyFilePathsFound}= if
         Recursive =:= false,
@@ -603,8 +604,16 @@ main_arguments([], FilePaths0, Directories,
                  FilePathsFound,
     DependencyFilePathsN = lists:reverse(DependencyFilePaths0) ++
                            DependencyFilePathsFound,
-    State#state{dependency_file_paths = DependencyFilePathsN,
-                file_paths = FilePathsN}.
+    if
+        FilePathsN == [],
+        DependencyFilePathsN == [],
+        ChecksInfo =:= false ->
+            io:format(help(), [filename:basename(?FILE)]),
+            exit_code(1);
+        true ->
+            State#state{dependency_file_paths = DependencyFilePathsN,
+                        file_paths = FilePathsN}
+    end.
 
 main_warnings_merge([], Warnings, _) ->
     Warnings;
