@@ -54,6 +54,7 @@
 -export([checks/0,
          checks_expand/2,
          checks_expand/3,
+         checks_merge/2,
          analyze/1,
          analyze/2,
          main/1]).
@@ -95,6 +96,10 @@
             input_source_only = false :: boolean(),
             recursive = false :: boolean(),
             checks_info = false :: boolean(),
+            dependency_store = undefined :: undefined | string(),
+            dependency_load = [] :: list({severity(),
+                                          message(),
+                                          nonempty_list(problem())}),
             dependency_file_paths = [] :: list(file_path()),
             file_paths = [] :: list(file_path())
         }).
@@ -304,6 +309,31 @@ checks_expand(FilePaths, Checks) ->
 
 %%-------------------------------------------------------------------------
 %% @doc
+%% ===Merge existing checks.===
+%% @end
+%%-------------------------------------------------------------------------
+
+-spec checks_merge(ChecksA :: checks(),
+                   ChecksB :: checks()) ->
+    Checks :: checks().
+
+checks_merge(ChecksA, ChecksB) ->
+    lists:foldl(fun({SeverityA, MessageA, ProblemsA}, ChecksNew0) ->
+        case lists:keytake(MessageA, 2, ChecksNew0) of
+            {value, {SeverityA, MessageA, ProblemsB}, ChecksNew1} ->
+                lists:umerge(ChecksNew1,
+                             [{SeverityA, MessageA,
+                               lists:umerge(lists:usort(ProblemsA),
+                                            lists:usort(ProblemsB))}]);
+            false ->
+                lists:umerge(ChecksNew0,
+                             [{SeverityA, MessageA, lists:usort(ProblemsA)}])
+        end
+    end, lists:usort(ChecksB), lists:usort(ChecksA)).
+
+
+%%-------------------------------------------------------------------------
+%% @doc
 %% ===Analyze a file.===
 %% @end
 %%-------------------------------------------------------------------------
@@ -402,16 +432,26 @@ main(Arguments) ->
     #state{severity_min = SeverityMin,
            consistency_checks = ConsistencyChecks,
            checks_info = ChecksInfo,
+           dependency_store = DependencyStore,
+           dependency_load = DependencyLoad,
            dependency_file_paths = DependencyFilePaths,
            file_paths = FilePaths} = State,
-    Checks = checks(),
+    ChecksCore = checks(),
     if
         ConsistencyChecks =:= true ->
-            ok = consistency_checks(Checks);
+            ok = consistency_checks(ChecksCore);
         ConsistencyChecks =:= false ->
             ok
     end,
+    Checks = checks_merge(DependencyLoad, ChecksCore),
     ChecksExpanded = checks_expand(DependencyFilePaths, SeverityMin, Checks),
+    if
+        DependencyStore =:= undefined ->
+            ok;
+        is_list(DependencyStore) ->
+            ok = dependency_store(DependencyStore, ChecksExpanded),
+            exit_code(0)
+    end,
     if
         ChecksInfo =:= true ->
             io:format("~p~n", [ChecksExpanded]),
@@ -470,6 +510,17 @@ main_arguments(["-d", Dependency | Arguments], FilePaths, Directories,
                            [Dependency | DependencyFilePaths],
                            DependencyDirectories, State)
     end;
+main_arguments(["-D", DependencyIdentifier | Arguments], FilePaths, Directories,
+               DependencyFilePaths, DependencyDirectories,
+               #state{dependency_load = OldDependencyLoad} = State) ->
+    {ok, PestData} = pest_data_find(pest),
+    {dependency, Dependencies} = lists:keyfind(dependency, 1, PestData),
+    {DependencyIdentifier,
+     Checks} = lists:keyfind(DependencyIdentifier, 1, Dependencies),
+    NewDependencyLoad = checks_merge(OldDependencyLoad, Checks),
+    main_arguments(Arguments, FilePaths, Directories,
+                   DependencyFilePaths, DependencyDirectories,
+                   State#state{dependency_load = NewDependencyLoad});
 main_arguments(["-e" | Arguments], FilePaths, Directories,
                DependencyFilePaths, DependencyDirectories,
                #state{input_beam_only = false} = State) ->
@@ -516,20 +567,24 @@ main_arguments(["-s", SeverityMin | Arguments], FilePaths, Directories,
     main_arguments(Arguments, FilePaths, Directories,
                    DependencyFilePaths, DependencyDirectories,
                    State#state{severity_min = SeverityMinValue});
-main_arguments(["-U", Component | _], _, _, _, _, _) ->
-    Update = case Component of
+main_arguments(["-U", Component | Arguments], FilePaths, Directories,
+               DependencyFilePaths, DependencyDirectories, State) ->
+    case Component of
         "crypto" ->
-            update_crypto_data();
+            ok = update_crypto_data(),
+            exit_code(0);
+        "pest/" ++ Path ->
+            case Path of
+                "dependency/" ++ Identifier ->
+                    main_arguments(Arguments, FilePaths, Directories,
+                                   DependencyFilePaths, DependencyDirectories,
+                                   State#state{dependency_store = Identifier});
+                _ ->
+                    erlang:error({invalid_pest_component, Component})
+            end;
         _ ->
             erlang:error({invalid_component, Component})
-    end,
-    case Update of
-        ok ->
-            ok;
-        {error, Reason} ->
-            erlang:error({update_failed, Reason})
-    end,
-    exit_code(0);
+    end;
 main_arguments(["-v" | Arguments], FilePaths, Directories,
                DependencyFilePaths, DependencyDirectories, State) ->
     main_arguments(Arguments, FilePaths, Directories,
@@ -570,7 +625,8 @@ main_arguments([], FilePaths0, Directories,
                #state{input_beam_only = BeamOnly,
                       input_source_only = SourceOnly,
                       recursive = Recursive,
-                      checks_info = ChecksInfo} = State) ->
+                      checks_info = ChecksInfo,
+                      dependency_store = DependencyStore} = State) ->
     {FilePathsFound,
      DependencyFilePathsFound}= if
         Recursive =:= false,
@@ -606,7 +662,8 @@ main_arguments([], FilePaths0, Directories,
                            DependencyFilePathsFound,
     if
         FilePathsN == [],
-        ChecksInfo =:= false ->
+        ChecksInfo =:= false,
+        DependencyStore =:= undefined ->
             io:format(help(), [filename:basename(?FILE)]),
             exit_code(1);
         true ->
@@ -729,6 +786,23 @@ checks_expand_loop(FilePaths, ChecksOld) ->
         true ->
             checks_expand_loop(FilePaths, ChecksNewN)
     end.
+
+dependency_store(Dependency, Checks) ->
+    PestData1 = case pest_data_find(pest) of
+        {ok, PestData0} ->
+            PestData0;
+        error ->
+            [{dependency, []}]
+    end,
+    {value,
+     {dependency, Dependencies0},
+     PestData2} = lists:keytake(dependency, 1, PestData1),
+    DependenciesN = lists:keystore(Dependency, 1, Dependencies0,
+                                   {Dependency, Checks}),
+    PestDataN = lists:keystore(dependency, 1, PestData2,
+                               {dependency, DependenciesN}),
+    pest_data_store(pest, PestDataN),
+    ok.
 
 analyze_store(Call, Line,
               #warnings{function_calls = FunctionCalls} = Warnings) ->
@@ -1081,6 +1155,7 @@ help() ->
   -c              Perform internal consistency checks
   -d DEPENDENCY   Expand the checks to include a dependency
                   (provide the dependency as a file path or directory)
+  -D IDENTIFIER   Expand the checks to include a dependency from an identifier
   -e              Only process source files recursively
   -h              List available command line flags
   -i              Display checks information after expanding dependencies
@@ -1089,7 +1164,7 @@ help() ->
   -s SEVERITY     Set the minimum severity to use when reporting problems
                   (default is 50)
   -U COMPONENT    Update local data related to a component
-                  (valid components are: crypto)
+                  (valid components are: crypto, pest/dependency/IDENTIFIER)
   -v              Verbose output (set the minimum severity to 0)
   -V [COMPONENT]  Print version information
                   (valid components are: pest, crypto)

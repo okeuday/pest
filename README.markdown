@@ -22,6 +22,7 @@ is provided with the `-h` command line argument, with the output shown below:
       -c              Perform internal consistency checks
       -d DEPENDENCY   Expand the checks to include a dependency
                       (provide the dependency as a file path or directory)
+      -D IDENTIFIER   Expand the checks to include a dependency from an identifier
       -e              Only process source files recursively
       -h              List available command line flags
       -i              Display checks information after expanding dependencies
@@ -30,7 +31,7 @@ is provided with the `-h` command line argument, with the output shown below:
       -s SEVERITY     Set the minimum severity to use when reporting problems
                       (default is 50)
       -U COMPONENT    Update local data related to a component
-                      (valid components are: crypto)
+                      (valid components are: crypto, pest/dependency/IDENTIFIER)
       -v              Verbose output (set the minimum severity to 0)
       -V [COMPONENT]  Print version information
                       (valid components are: pest, crypto)
@@ -62,16 +63,24 @@ To check version information related to Erlang/OTP crypto, use:
 
     ./pest.erl -V crypto
 
-To do a slower scan that includes indirect function calls from Erlang/OTP (as described in [Indirect Security Concerns](https://github.com/okeuday/pest/#indirect-security-concerns)), use:
+To do a slower scan that includes indirect function calls from Erlang/OTP
+(as described in [Indirect Security Concerns](https://github.com/okeuday/pest/#indirect-security-concerns)), use:
 
     ./pest.erl -v -b -d /erlang_install_prefix/lib/erlang/lib/ /path_to_somewhere/lib
+
+Determining checks that include all indirect function calls for Erlang/OTP 19.1
+can take minutes, so it is easier to work with cached results.  The checks have
+already been cached for 19.1 (with the command `./pest.erl -v -b -d /erlang_install_prefix/lib/erlang/lib/ -U pest/dependency/ErlangOTP/19.1`),
+which can be used for the same output with:
+
+    ./pest.erl -v -b -D ErlangOTP/19.1 /path_to_somewhere/lib
 
 Test
 ----
 
 To have pest.erl check itself, use:
 
-    ./pest.erl -v -c ./pest.erl
+    ./pest.erl -v -c -D ErlangOTP/19.1 ./pest.erl
 
 Indirect Security Concerns
 --------------------------
