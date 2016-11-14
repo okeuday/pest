@@ -1,7 +1,7 @@
 #!/usr/bin/env escript
 %%!
 %-*-Mode:erlang;coding:utf-8;tab-width:4;c-basic-offset:4;indent-tabs-mode:()-*-
-% ex: set ft=erlang fenc=utf-8 sts=4 ts=4 sw=4 et:
+% ex: set ft=erlang fenc=utf-8 sts=4 ts=4 sw=4 et nomod:
 %%%------------------------------------------------------------------------
 %%% @doc
 %%% ==Primitive Erlang Security Tool (PEST)==
@@ -43,11 +43,11 @@
 %%% OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 %%% DAMAGE.
 %%%
-%%% @version 0.3.0 {@date} {@time}
+%%% @version 0.4.0 {@date} {@time}
 %%%------------------------------------------------------------------------
 
 -module(pest).
--vsn("0.3.0").
+-vsn("0.4.0").
 
 -mode(compile).
 
