@@ -45,7 +45,7 @@ due to how the Erlang compiler preprocessor and optimizations can influence
 function calls.
 
 Please feel free to contribute!  To add security problems to the scan
-insert information into the [list of checks](https://github.com/okeuday/pest/blob/master/pest.erl#L150-L269).
+insert information into the [list of checks](https://github.com/okeuday/pest/blob/master/pest.erl#L155-L274).
 
 Usage
 -----
@@ -899,7 +899,7 @@ resulting expanded checks after including Erlang/OTP indirect function calls
     ...7344 more lines...                ]}]
 
 For comparison, the default checks specified in the pest.erl source code
-are below (92 lines that represent [all core problems](https://github.com/okeuday/pest/blob/master/pest.erl#L150-L269)):
+are below (92 lines that represent [all core problems](https://github.com/okeuday/pest/blob/master/pest.erl#L155-L274)):
 
     $ ./pest.erl -v -i
     [{90,"Port Drivers may cause undefined behavior",
