@@ -68,19 +68,19 @@ To do a slower scan that includes indirect function calls from Erlang/OTP
 
     ./pest.erl -v -b -d /erlang_install_prefix/lib/erlang/lib/ /path_to_somewhere/lib
 
-Determining checks that include all indirect function calls for Erlang/OTP 19.1
+Determining checks that include all indirect function calls for Erlang/OTP 19.2
 can take several minutes, so it is easier to use cached results.
-The checks have already been cached for Erlang/OTP 19.1 (with the command `./pest.erl -v -b -d /erlang_install_prefix/lib/erlang/lib/ -U pest/dependency/ErlangOTP/19.1`),
+The checks have already been cached for Erlang/OTP 19.2 (with the command `./pest.erl -v -b -d /erlang_install_prefix/lib/erlang/lib/ -U pest/dependency/ErlangOTP/19.2`),
 which can be used to obtain the same output with:
 
-    ./pest.erl -v -b -D ErlangOTP/19.1 /path_to_somewhere/lib
+    ./pest.erl -v -b -D ErlangOTP/19.2 /path_to_somewhere/lib
 
 Test
 ----
 
 To have pest.erl check itself, use:
 
-    ./pest.erl -v -c -D ErlangOTP/19.1 ./pest.erl
+    ./pest.erl -v -c -D ErlangOTP/19.2 ./pest.erl
 
 Indirect Security Concerns
 --------------------------

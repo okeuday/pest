@@ -43,11 +43,11 @@
 %%% OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 %%% DAMAGE.
 %%%
-%%% @version 0.3.0 {@date} {@time}
+%%% @version 0.4.0 {@date} {@time}
 %%%------------------------------------------------------------------------
 
 -module(pest).
--vsn("0.3.0").
+-vsn("0.4.0").
 
 -mode(compile).
 
@@ -181,46 +181,10 @@ checks() ->
       [{os, cmd, 1}]},
      {15,
       "Keep OpenSSL updated for crypto module use (run with \"-V crypto\")",
-       % application modules: public_key (with "-m public_key")
-['OTP-PUB-KEY','PKCS-FRAME',pubkey_cert,pubkey_cert_records,pubkey_crl,
- pubkey_pbe,pubkey_pem,pubkey_ssh,public_key] ++
-       % application modules: snmp (with "-m snmp")
-[snmp,snmp_app,snmp_app_sup,snmp_community_mib,snmp_conf,snmp_config,
- snmp_framework_mib,snmp_generic,snmp_generic_mnesia,snmp_index,snmp_log,
- snmp_mini_mib,snmp_misc,snmp_note_store,snmp_notification_mib,snmp_pdus,
- snmp_shadow_table,snmp_standard_mib,snmp_target_mib,snmp_user_based_sm_mib,
- snmp_usm,snmp_verbosity,snmp_view_based_acm_mib,snmpa,snmpa_acm,snmpa_agent,
- snmpa_agent_sup,snmpa_app,snmpa_authentication_service,snmpa_conf,
- snmpa_discovery_handler,snmpa_discovery_handler_default,snmpa_error,
- snmpa_error_io,snmpa_error_logger,snmpa_error_report,snmpa_local_db,
- snmpa_mib,snmpa_mib_data,snmpa_mib_data_tttn,snmpa_mib_lib,snmpa_mib_storage,
- snmpa_mib_storage_dets,snmpa_mib_storage_ets,snmpa_mib_storage_mnesia,
- snmpa_misc_sup,snmpa_mpd,snmpa_net_if,snmpa_net_if_filter,
- snmpa_network_interface,snmpa_network_interface_filter,
- snmpa_notification_delivery_info_receiver,snmpa_notification_filter,
- snmpa_set,snmpa_set_lib,snmpa_set_mechanism,snmpa_supervisor,snmpa_svbl,
- snmpa_symbolic_store,snmpa_target_cache,snmpa_trap,snmpa_usm,snmpa_vacm,
- snmpc,snmpc_lib,snmpc_mib_gram,snmpc_mib_to_hrl,snmpc_misc,snmpc_tok,snmpm,
- snmpm_conf,snmpm_config,snmpm_misc_sup,snmpm_mpd,snmpm_net_if,
- snmpm_net_if_filter,snmpm_net_if_mt,snmpm_network_interface,
- snmpm_network_interface_filter,snmpm_server,snmpm_server_sup,
- snmpm_supervisor,snmpm_user,snmpm_user_default,snmpm_user_old,snmpm_usm] ++
-       % application modules: ssh (with "-m ssh")
-[ssh,ssh_acceptor,ssh_acceptor_sup,ssh_app,ssh_auth,ssh_bits,ssh_channel,
- ssh_channel_sup,ssh_cli,ssh_client_key_api,ssh_connection,
- ssh_connection_handler,ssh_connection_sup,ssh_daemon_channel,ssh_dbg,
- ssh_file,ssh_info,ssh_io,ssh_message,ssh_no_io,ssh_server_key_api,ssh_sftp,
- ssh_sftpd,ssh_sftpd_file,ssh_sftpd_file_api,ssh_shell,ssh_subsystem_sup,
- ssh_sup,ssh_system_sup,ssh_transport,ssh_xfer,sshc_sup,sshd_sup] ++
-       % application modules: ssl (with "-m ssl")
-[dtls,dtls_connection,dtls_connection_sup,dtls_handshake,dtls_record,dtls_v1,
- inet6_tls_dist,inet_tls_dist,ssl,ssl_alert,ssl_app,ssl_certificate,
- ssl_cipher,ssl_config,ssl_connection,ssl_crl,ssl_crl_cache,ssl_crl_cache_api,
- ssl_crl_hash_dir,ssl_dist_sup,ssl_handshake,ssl_listen_tracker_sup,
- ssl_manager,ssl_pkix_db,ssl_record,ssl_session,ssl_session_cache,
- ssl_session_cache_api,ssl_socket,ssl_srp_primes,ssl_sup,ssl_tls_dist_proxy,
- ssl_v2,ssl_v3,tls,tls_connection,tls_connection_sup,tls_handshake,tls_record,
- tls_v1] ++
+      application_modules(public_key) ++
+      application_modules(snmp) ++
+      application_modules(ssh) ++
+      application_modules(ssl) ++
       [% encrypt_debug_info option usage
        {compile, file, 2},
        {compile, forms, 2},
@@ -249,15 +213,7 @@ checks() ->
        {crypto, verify, 5}]},
      {10,
       "Dynamic creation of atoms can exhaust atom memory",
-       % application modules: xmerl (with "-m xmerl")
-[xmerl,xmerl_b64Bin,xmerl_b64Bin_scan,xmerl_eventp,xmerl_html,xmerl_lib,
- xmerl_otpsgml,xmerl_regexp,xmerl_sax_old_dom,xmerl_sax_parser,
- xmerl_sax_parser_latin1,xmerl_sax_parser_list,xmerl_sax_parser_utf16be,
- xmerl_sax_parser_utf16le,xmerl_sax_parser_utf8,xmerl_sax_simple_dom,
- xmerl_scan,xmerl_sgml,xmerl_simple,xmerl_text,xmerl_ucs,xmerl_uri,
- xmerl_validate,xmerl_xlate,xmerl_xml,xmerl_xpath,xmerl_xpath_lib,
- xmerl_xpath_parse,xmerl_xpath_pred,xmerl_xpath_scan,xmerl_xs,xmerl_xsd,
- xmerl_xsd_type] ++
+      application_modules(xmerl) ++
       [{erlang, binary_to_atom, 2},
        {erlang, binary_to_term, 1}, % use 'safe' argument
        {erlang, list_to_atom, 1},
@@ -538,14 +494,8 @@ main_arguments(["-i" | Arguments], FilePaths, Directories,
                    State#state{checks_info = true});
 main_arguments(["-m", ApplicationName | _], _, _, _, _, _) ->
     Application = erlang:list_to_atom(ApplicationName),
-    case application:load(Application) of
-        ok ->
-            {ok, Modules} = application:get_key(Application, modules),
-            io:format("~p~n", [lists:sort(Modules)]),
-            exit_code(0);
-        {error, Reason} ->
-            erlang:error({invalid_application, Reason})
-    end;
+    io:format("~p~n", [application_modules(Application)]),
+    exit_code(0);
 main_arguments(["-r" | Arguments], FilePaths, Directories,
                DependencyFilePaths, DependencyDirectories, State) ->
     main_arguments(Arguments, FilePaths, Directories,
@@ -932,6 +882,17 @@ abstract_forms(FilePath) ->
             end
     end.
 
+application_modules(Application) when is_atom(Application) ->
+    case application:load(Application) of
+        ok ->
+            {ok, Modules} = application:get_key(Application, modules),
+            ModulesSorted = lists:sort(Modules),
+            _ = application:unload(Application),
+            ModulesSorted;
+        {error, Reason} ->
+            erlang:error({invalid_application, Reason})
+    end.
+    
 function_exists(M, F, A) ->
     Loaded = code:is_loaded(M) =/= false,
     if
