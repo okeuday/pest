@@ -45,7 +45,7 @@ due to how the Erlang compiler preprocessor and optimizations can influence
 function calls.
 
 Please feel free to contribute!  To add security problems to the scan
-insert information into the [list of checks](https://github.com/okeuday/pest/blob/master/pest.erl#L155-L274).
+insert information into the [list of checks](https://github.com/okeuday/pest/blob/master/pest.erl#L155-L228).
 
 Usage
 -----
