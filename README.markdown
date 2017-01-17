@@ -10,11 +10,8 @@ Do a basic scan of Erlang source code and report any function calls that may
 cause Erlang source code to be insecure.
 
 The tool is provided in the form of an escript (an Erlang script) which may
-also be used as a module, however, module usage currently requires changing
-the first line of the file to not have a `#` character
-(can insert `%` to comment it out, there is a bug filed about this problem at
- [ERL-289](https://bugs.erlang.org/browse/ERL-289)).  Usage of the script
-is provided with the `-h` command line argument, with the output shown below:
+also be used as a module.  Usage of the script is provided with the `-h`
+command line argument, with the output shown below:
 
     Usage pest.erl [OPTION] [FILES] [DIRECTORIES]
     

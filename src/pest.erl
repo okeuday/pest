@@ -9,7 +9,7 @@
 %%%
 %%% BSD LICENSE
 %%% 
-%%% Copyright (c) 2016, Michael Truog <mjtruog at gmail dot com>
+%%% Copyright (c) 2016-2017, Michael Truog <mjtruog at gmail dot com>
 %%% All rights reserved.
 %%% 
 %%% Redistribution and use in source and binary forms, with or without
@@ -46,10 +46,10 @@
 %%% @version 0.4.0 {@date} {@time}
 %%%------------------------------------------------------------------------
 
+-ifndef(ESCRIPT).
 -module(pest).
+-endif.
 -vsn("0.4.0").
-
--mode(compile).
 
 -export([checks/0,
          checks_expand/2,
@@ -915,7 +915,7 @@ exit_code(ExitCode) when is_integer(ExitCode) ->
 
 pest_data_file() ->
     filename:join([filename:dirname(?FILE),
-                   "priv", "pest.dat"]).
+                   "..", "priv", "pest.dat"]).
 
 pest_data_find(Key) ->
     FilePath = pest_data_file(),
