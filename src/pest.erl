@@ -160,7 +160,8 @@
 %% 100..86 undefined behavior that can be exploited
 %%  85..75 OS execution that can be exploited
 %%  25..15 Erlang VM dependencies can be exploited
-%%  14..0  Erlang VM may be killed due to memory consumption
+%%  14..6  Erlang VM may be killed due to memory consumption
+%%   5..0  Erlang VM may have a security weakness (potential exploit)
 
 checks() ->
     [{90,
