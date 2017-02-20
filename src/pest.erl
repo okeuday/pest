@@ -225,7 +225,10 @@ checks() ->
        {file, path_script, 2},
        {file, path_script, 3},
        {file, script, 1},
-       {file, script, 2}]}].
+       {file, script, 2}]},
+     {5,
+      "PCRE use may be exploited with regexes",
+      [re]}].
 
 %%-------------------------------------------------------------------------
 

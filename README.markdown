@@ -997,15 +997,12 @@ See [Usage](https://github.com/okeuday/pest/#usage) for more information.
 Limitations
 -----------
 
-1. All function calls that are checked use an Erlang atom for the module name
-   and function name, so if a variable is used for either, it is possible that
-   the function usage will not be seen by PEST.  If you are concerned about
-   this problem, you can make sure optimizations are being used during
-   compilation and confirm you are using PEST with the beam output of the
-   compilation.
-2. PCRE is compiled into ERTS, so any problems with PCRE are not represented
-   as NIF or Port Driver problems in Erlang, though problems have existed
-   ([ERL-208](https://bugs.erlang.org/browse/ERL-208)).
+* All function calls that are checked use an Erlang atom for the module name
+  and function name, so if a variable is used for either, it is possible that
+  the function usage will not be seen by PEST.  If you are concerned about
+  this problem, you can make sure optimizations are being used during
+  compilation and confirm you are using PEST with the beam output of the
+  compilation.
 
 Author
 ------
