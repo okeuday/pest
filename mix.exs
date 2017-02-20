@@ -5,9 +5,9 @@ defmodule PEST.Mixfile do
     [app: :pest,
      version: "0.5.0",
      language: :erlang,
-     description: description,
-     package: package,
-     deps: deps]
+     description: description(),
+     package: package(),
+     deps: deps()]
   end
 
   def application do
