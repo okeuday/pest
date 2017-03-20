@@ -228,7 +228,7 @@ checks() ->
        {file, script, 1},
        {file, script, 2}]},
      {5,
-      "PCRE use may be exploited with regexes",
+      "PCRE use may be exploited with regexes (CVE-2016-10253)",
       [re]}].
 
 %%-------------------------------------------------------------------------
