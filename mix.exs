@@ -26,7 +26,7 @@ defmodule PEST.Mixfile do
   defp package do
     [files: ~w(pest.erl src doc rebar.config README.markdown LICENSE),
      maintainers: ["Michael Truog"],
-     licenses: ["BSD"],
+     licenses: ["MIT"],
      links: %{"GitHub" => "https://github.com/okeuday/pest"}]
    end
 end
