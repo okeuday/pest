@@ -3,7 +3,7 @@ defmodule PEST.Mixfile do
 
   def project do
     [app: :pest,
-     version: "0.5.0",
+     version: "0.6.0",
      language: :erlang,
      description: description(),
      package: package(),
@@ -24,7 +24,7 @@ defmodule PEST.Mixfile do
   end
 
   defp package do
-    [files: ~w(pest.erl src doc rebar.config README.markdown LICENSE),
+    [files: ~w(pest.erl src doc priv rebar.config README.markdown LICENSE),
      maintainers: ["Michael Truog"],
      licenses: ["MIT"],
      links: %{"GitHub" => "https://github.com/okeuday/pest"}]

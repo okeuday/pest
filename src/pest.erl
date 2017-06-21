@@ -29,13 +29,13 @@
 %%% FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 %%% DEALINGS IN THE SOFTWARE.
 %%%
-%%% @version 0.4.0 {@date} {@time}
+%%% @version 0.6.0 {@date} {@time}
 %%%------------------------------------------------------------------------
 
 -ifndef(ESCRIPT).
 -module(pest).
 -endif.
--vsn("0.4.0").
+-vsn("0.6.0").
 
 -export([checks/0,
          checks_expand/2,
@@ -212,10 +212,7 @@ checks() ->
        {file, path_script, 2},
        {file, path_script, 3},
        {file, script, 1},
-       {file, script, 2}]},
-     {5,
-      "PCRE use may be exploited with regexes (CVE-2016-10253)",
-      [re]}].
+       {file, script, 2}]}].
 
 %%-------------------------------------------------------------------------
 
