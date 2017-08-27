@@ -896,7 +896,7 @@ resulting expanded checks after including Erlang/OTP indirect function calls
     ...7344 more lines...                ]}]
 
 For comparison, the default checks specified in the pest.erl source code
-are below (92 lines that represent [all core problems](https://github.com/okeuday/pest/blob/master/pest.erl#L155-L274)):
+are below (92 lines that represent [all core problems](https://github.com/okeuday/pest/blob/master/src/pest.erl#L153-L215)):
 
     $ ./pest.erl -v -i
     [{90,"Port Drivers may cause undefined behavior",
