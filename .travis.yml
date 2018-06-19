@@ -1,8 +1,7 @@
 language: erlang
 otp_release:
-  - 20.0
+  - 20.3
   - 19.3
-  - 19.2
   - 19.0
 script: ./pest.erl -c ./pest.erl
 branches:
