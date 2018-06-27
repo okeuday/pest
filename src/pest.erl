@@ -483,6 +483,11 @@ main_arguments(["-m", ApplicationName | _], _, _, _, _, _) ->
     Application = erlang:list_to_atom(ApplicationName),
     io:format("~p~n", [application_modules(Application)]),
     exit_code(0);
+main_arguments(["-p", Directory | Arguments], FilePaths, Directories,
+               DependencyFilePaths, DependencyDirectories, State) ->
+    true = code:add_pathz(Directory),
+    main_arguments(Arguments, FilePaths, Directories,
+                   DependencyFilePaths, DependencyDirectories, State);
 main_arguments(["-r" | Arguments], FilePaths, Directories,
                DependencyFilePaths, DependencyDirectories, State) ->
     main_arguments(Arguments, FilePaths, Directories,
@@ -1108,6 +1113,7 @@ help() ->
   -h              List available command line flags
   -i              Display checks information after expanding dependencies
   -m APPLICATION  Display a list of modules in an Erlang/OTP application
+  -p DIRECTORY    Append a directory on the code server's search path list
   -r              Recursively search directories
   -s SEVERITY     Set the minimum severity to use when reporting problems
                   (default is 50)

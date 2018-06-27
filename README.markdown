@@ -79,8 +79,8 @@ To have pest.erl check itself, use:
 
     ./pest.erl -v -c -D ErlangOTP/21.0 ./pest.erl
 
-Indirect Security Concerns
---------------------------
+Indirect Security Concerns in Erlang/OTP
+----------------------------------------
 
 Usage of various Erlang/OTP dependencies can have their own security concerns
 which Erlang source code may depend on indirectly.  To provide a representation
@@ -1036,7 +1036,168 @@ are below (94 lines that represent [all core problems](https://github.com/okeuda
        {file,script,1},
        {file,script,2}]}]
 
-See [Usage](https://github.com/okeuday/pest/#usage) for more information.
+See [Usage](#usage) for more information.
+
+Indirect Security Concerns in Elixir
+------------------------------------
+
+To provide a representation of security concerns related to Elixir
+dependencies, the pest.erl script was ran on all of the Elixir 1.6.6
+installation beam files with the result provided below:
+
+    $ ./pest.erl -v -b -D ErlangOTP/21.0 -p ~/installed/lib/elixir/lib/elixir/ebin ~/installed/lib/elixir/lib
+     90: Port Drivers may cause undefined behavior
+         Elixir.Mix.Tasks.Profile.Fprof.beam:182 (fprof:analyse/1)
+         Elixir.Mix.Tasks.Profile.Fprof.beam:177 (fprof:apply/3)
+         Elixir.Mix.Tasks.Profile.Fprof.beam:176 (fprof:profile/1)
+     80: OS shell usage may require input validation
+         Elixir.IEx.Introspection.beam:128 (os:cmd/1)
+     80: OS process creation may require input validation
+         Elixir.Code.beam:989 (beam_lib:chunks/2)
+         Elixir.Collectable.File.Stream.beam:42 (file:open/2)
+         Elixir.Enumerable.File.Stream.beam:78 (file:open/2)
+         Elixir.Exception.beam:226 (beam_lib:chunks/2)
+         Elixir.Exception.beam:[261,293] (erl_eval:expr/3)
+         Elixir.File.beam:840 (file:copy/2)
+         Elixir.File.beam:606 (file:copy/3)
+         Elixir.File.beam:1256 (file:open/2)
+         Elixir.File.beam:[919,929] (file:write_file/3)
+         Elixir.GenEvent.beam:315 (gen:debug_options/2)
+         Elixir.GenEvent.beam:347 (sys:handle_system_msg/7)
+         Elixir.Kernel.Typespec.beam:356 (beam_lib:chunks/2)
+         Elixir.Port.beam:181 (erlang:open_port/2)
+         Elixir.Protocol.beam:260 (beam_lib:chunks/2)
+         Elixir.Protocol.beam:315 (beam_lib:chunks/3)
+         Elixir.Protocol.beam:501 (compile:forms/2)
+         Elixir.Record.Extractor.beam:79 (epp:parse_file/2)
+         Elixir.Record.Extractor.beam:114 (erl_eval:expr/2)
+         Elixir.System.beam:629 (erlang:open_port/2)
+         elixir.beam:233 (erl_eval:expr/5)
+         elixir_compiler.beam:80 (beam_lib:chunks/2)
+         elixir_erl.beam:13 (beam_lib:all_chunks/1)
+         elixir_erl.beam:48 (beam_lib:chunks/2)
+         elixir_erl.beam:33 (compile:noenv_forms/2)
+         elixir_erl.beam:87 (erl_eval:expr/3)
+         Elixir.IEx.CLI.beam:72 (erlang:open_port/2)
+         Elixir.IEx.CLI.beam:57 (user:start/0)
+         Elixir.IEx.Helpers.beam:1055 (compile:file/2)
+         Elixir.IEx.Introspection.beam:160 (beam_lib:chunks/2)
+         Elixir.IEx.Pry.beam:376 (beam_lib:chunks/2)
+         Elixir.IEx.Pry.beam:410 (compile:noenv_forms/2)
+         Elixir.Mix.Dep.Loader.beam:390 (file:consult/1)
+         Elixir.Mix.Rebar.beam:50 (file:consult/1)
+         Elixir.Mix.Rebar.beam:198 (file:script/2)
+         Elixir.Mix.Shell.beam:102 (erlang:open_port/2)
+         Elixir.Mix.Tasks.Compile.App.beam:161 (file:consult/1)
+         Elixir.Mix.Tasks.Compile.Erlang.beam:104 (compile:file/2)
+         Elixir.Mix.Tasks.Compile.Erlang.beam:147 (epp:parse_file/3)
+         Elixir.Mix.Tasks.Compile.Leex.beam:62 (leex:file/2)
+         Elixir.Mix.Tasks.Compile.Yecc.beam:62 (yecc:file/2)
+         Elixir.Mix.Tasks.Escript.Build.beam:282 (beam_lib:all_chunks/1)
+         Elixir.Mix.Tasks.Escript.Build.beam:290 (ram_file:open/2)
+         Elixir.Mix.Tasks.Profile.Fprof.beam:182 (fprof:analyse/1)
+         Elixir.Mix.Tasks.Profile.Fprof.beam:177 (fprof:apply/3)
+         Elixir.Mix.Tasks.Profile.Fprof.beam:176 (fprof:profile/1)
+         Elixir.Mix.Tasks.Test.Cover.beam:24 (cover:analyse_to_file/3)
+         Elixir.Mix.Tasks.Test.Cover.beam:9 (cover:compile_beam_directory/1)
+         Elixir.Mix.Tasks.Test.Cover.beam:23 (cover:modules/0)
+         Elixir.Mix.Tasks.Test.Cover.beam:7 (cover:start/0)
+         Elixir.Mix.Tasks.Xref.beam:343 (beam_lib:chunks/3)
+     15: Keep OpenSSL updated for crypto module use (run with "-V crypto")
+         Elixir.Code.beam:989 (beam_lib:chunks/2)
+         Elixir.Exception.beam:226 (beam_lib:chunks/2)
+         Elixir.Exception.beam:[261,293] (erl_eval:expr/3)
+         Elixir.Kernel.Typespec.beam:356 (beam_lib:chunks/2)
+         Elixir.Protocol.beam:260 (beam_lib:chunks/2)
+         Elixir.Protocol.beam:315 (beam_lib:chunks/3)
+         Elixir.Protocol.beam:501 (compile:forms/2)
+         Elixir.Record.Extractor.beam:79 (epp:parse_file/2)
+         Elixir.Record.Extractor.beam:114 (erl_eval:expr/2)
+         elixir.beam:233 (erl_eval:expr/5)
+         elixir_compiler.beam:80 (beam_lib:chunks/2)
+         elixir_erl.beam:48 (beam_lib:chunks/2)
+         elixir_erl.beam:33 (compile:noenv_forms/2)
+         elixir_erl.beam:87 (erl_eval:expr/3)
+         Elixir.IEx.CLI.beam:57 (user:start/0)
+         Elixir.IEx.Helpers.beam:1055 (compile:file/2)
+         Elixir.IEx.Introspection.beam:160 (beam_lib:chunks/2)
+         Elixir.IEx.Pry.beam:376 (beam_lib:chunks/2)
+         Elixir.IEx.Pry.beam:410 (compile:noenv_forms/2)
+         Elixir.Mix.PublicKey.beam:[38,39,56] (public_key:_/_)
+         Elixir.Mix.Rebar.beam:198 (file:script/2)
+         Elixir.Mix.Tasks.Compile.Erlang.beam:104 (compile:file/2)
+         Elixir.Mix.Tasks.Compile.Erlang.beam:147 (epp:parse_file/3)
+         Elixir.Mix.Tasks.Compile.Yecc.beam:62 (yecc:file/2)
+         Elixir.Mix.Tasks.Test.Cover.beam:24 (cover:analyse_to_file/3)
+         Elixir.Mix.Tasks.Test.Cover.beam:9 (cover:compile_beam_directory/1)
+         Elixir.Mix.Tasks.Test.Cover.beam:23 (cover:modules/0)
+         Elixir.Mix.Tasks.Test.Cover.beam:7 (cover:start/0)
+         Elixir.Mix.Tasks.Xref.beam:343 (beam_lib:chunks/3)
+     10: Dynamic creation of atoms can exhaust atom memory
+         Elixir.Code.Identifier.beam:198 (erlang:binary_to_atom/2)
+         Elixir.Code.beam:991 (erlang:binary_to_term/1)
+         Elixir.Kernel.CLI.beam:[389,400] (erlang:binary_to_atom/2)
+         Elixir.Kernel.Typespec.beam:[807,810] (erlang:binary_to_atom/2)
+         Elixir.Kernel.beam:[3362,3714,3674] (erlang:binary_to_atom/2)
+         Elixir.List.beam:704 (erlang:list_to_atom/1)
+         Elixir.Macro.beam:204 (erlang:binary_to_atom/2)
+         Elixir.Module.beam:[757,798,741,730] (erlang:binary_to_atom/2)
+         Elixir.Module.beam:1015 (erlang:list_to_atom/1)
+         Elixir.OptionParser.beam:739 (erlang:binary_to_atom/2)
+         Elixir.Protocol.beam:25 (erlang:binary_to_atom/2)
+         Elixir.Record.Extractor.beam:39 (erlang:list_to_atom/1)
+         Elixir.String.beam:2074 (erlang:binary_to_atom/2)
+         Elixir.ExUnit.Callbacks.beam:469 (erlang:binary_to_atom/2)
+         Elixir.ExUnit.Case.beam:[453,457] (erlang:binary_to_atom/2)
+         Elixir.ExUnit.Filters.beam:[61,62] (erlang:binary_to_atom/2)
+         Elixir.IEx.Autocomplete.beam:347 (erlang:binary_to_atom/2)
+         Elixir.IEx.CLI.beam:160 (erlang:list_to_atom/1)
+         Elixir.IEx.Helpers.beam:123 (erlang:binary_to_atom/2)
+         Elixir.IEx.Introspection.beam:517 (erlang:binary_to_atom/2)
+         Elixir.Logger.Formatter.beam:88 (erlang:binary_to_atom/2)
+         Elixir.Mix.CLI.beam:125 (erlang:binary_to_atom/2)
+         Elixir.Mix.Compilers.Elixir.beam:440 (erlang:binary_to_atom/2)
+         Elixir.Mix.Compilers.Elixir.beam:[516,489,143] (erlang:binary_to_term/1)
+         Elixir.Mix.Compilers.Erlang.beam:214 (erlang:binary_to_term/1)
+         Elixir.Mix.Compilers.Test.beam:178 (erlang:binary_to_term/1)
+         Elixir.Mix.Dep.ElixirSCM.beam:26 (erlang:binary_to_term/1)
+         Elixir.Mix.Dep.Fetcher.beam:152 (erlang:binary_to_atom/2)
+         Elixir.Mix.Dep.Loader.beam:390 (file:consult/1)
+         Elixir.Mix.Dep.beam:457 (erlang:binary_to_atom/2)
+         Elixir.Mix.Local.Installer.beam:[196,216,216] (erlang:binary_to_atom/2)
+         Elixir.Mix.Rebar.beam:50 (file:consult/1)
+         Elixir.Mix.Rebar.beam:198 (file:script/2)
+         Elixir.Mix.State.beam:14 (erlang:binary_to_atom/2)
+         Elixir.Mix.Task.beam:[195,273,101] (erlang:binary_to_atom/2)
+         Elixir.Mix.Tasks.App.Start.beam:193 (erlang:binary_to_atom/2)
+         Elixir.Mix.Tasks.App.Tree.beam:48 (erlang:binary_to_atom/2)
+         Elixir.Mix.Tasks.Cmd.beam:39 (erlang:binary_to_atom/2)
+         Elixir.Mix.Tasks.Compile.App.beam:192 (erlang:binary_to_atom/2)
+         Elixir.Mix.Tasks.Compile.App.beam:161 (file:consult/1)
+         Elixir.Mix.Tasks.Compile.Erlang.beam:[98,229] (erlang:binary_to_atom/2)
+         Elixir.Mix.Tasks.Compile.Protocols.beam:176 (erlang:binary_to_term/1)
+         Elixir.Mix.Tasks.Compile.Xref.beam:84 (erlang:binary_to_term/1)
+         Elixir.Mix.Tasks.Deps.Clean.beam:38 (erlang:binary_to_atom/2)
+         Elixir.Mix.Tasks.Deps.Get.beam:25 (erlang:binary_to_atom/2)
+         Elixir.Mix.Tasks.Deps.Tree.beam:[39,49] (erlang:binary_to_atom/2)
+         Elixir.Mix.Tasks.Deps.Unlock.beam:54 (erlang:binary_to_atom/2)
+         Elixir.Mix.Tasks.Deps.Update.beam:[44,64] (erlang:binary_to_atom/2)
+         Elixir.Mix.Tasks.Escript.Build.beam:169 (erlang:binary_to_atom/2)
+         Elixir.Mix.Tasks.Format.beam:218 (erlang:binary_to_term/1)
+         Elixir.Mix.Tasks.Xref.beam:353 (erlang:binary_to_term/1)
+
+To cache all indirect security concerns for Elixir 1.6.6 using Erlang/OTP 21.0
+the following command line was used:
+
+    ./pest.erl -v -b -p ~/installed/lib/elixir/lib/elixir/ebin -d ~/installed/lib/elixir/lib -U pest/dependency/Elixir/1.6.6/21.0
+
+To search an Elixir project's beam files for any indirect security concerns
+related to the Elixir 1.6.6 source code and the Erlang/OTP 21.0 source code,
+the command line arguments `-D ErlangOTP/21.0 -D Elixir/1.6.6/21.0` may be
+added to the pest.erl command line to utilize these cached indirect security
+concerns.
+
+See [Usage](#usage) for more information.
 
 Limitations
 -----------
