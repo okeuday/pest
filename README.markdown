@@ -73,6 +73,11 @@ which can be used to obtain the same output with:
 
     ./pest.erl -v -b -D ErlangOTP/21.0 /path_to_somewhere/lib
 
+If beam files created by an Elixir project need to be checked,
+the following command line could be used:
+
+    ./pest.erl -v -b -D ErlangOTP/21.0 -D Elixir/1.6.6/21.0 /path_to_somewhere/lib
+
 Test
 ----
 
