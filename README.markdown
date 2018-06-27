@@ -24,6 +24,7 @@ command line argument, with the output shown below:
       -h              List available command line flags
       -i              Display checks information after expanding dependencies
       -m APPLICATION  Display a list of modules in an Erlang/OTP application
+      -p DIRECTORY    Append a directory on the code server's search path list
       -r              Recursively search directories
       -s SEVERITY     Set the minimum severity to use when reporting problems
                       (default is 50)
