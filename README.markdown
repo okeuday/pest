@@ -62,7 +62,7 @@ To check version information related to Erlang/OTP crypto, use:
     ./pest.erl -V crypto
 
 To do a slower scan that includes indirect function calls from Erlang/OTP
-(as described in [Indirect Security Concerns](https://github.com/okeuday/pest/#indirect-security-concerns)), use:
+(as described in [Indirect Security Concerns in Erlang/OTP](#indirect-security-concerns-in-erlangotp) and [Elixir](#indirect-security-concerns-in-elixir)), use:
 
     ./pest.erl -v -b -d /erlang_install_prefix/lib/erlang/lib/ /path_to_somewhere/lib
 
