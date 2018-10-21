@@ -1030,30 +1030,43 @@ version_info_openssl(VersionRuntime) ->
         error ->
             []
     end,
-    SecurityProblemsList = [
-        if
-            % based on
-            % https://en.wikipedia.org/wiki/OpenSSL#Major_version_releases
-            Fork =< {"1", "0", "0"} ->
-                "OLD OpenSSL!";
+    SecurityProblems = if
+        % based on
+        % https://en.wikipedia.org/wiki/OpenSSL#Major_version_releases
+        Fork =< {"1", "0", "0"} ->
+            ["OLD OpenSSL!"];
+        true ->
+            []
+    end ++
+    lists:flatmap(fun({CVE, Level, _Fix, Affected}) ->
+        case version_info_openssl_check(Affected, Version) of
             true ->
-                ""
-        end |
-        lists:map(fun({CVE, Level, _Fix, Affected}) ->
-            case lists:member(Version, Affected) of
-                true ->
-                    CVE ++
-                    "(" ++ string:to_upper(erlang:atom_to_list(Level)) ++ ")";
-                false ->
-                    ""
-            end
-        end, Vulnerabilities)
-    ],
-    SecurityProblems = lists:filter(fun(S) ->
-        S /= ""
-    end, SecurityProblemsList),
-    {length(SecurityProblems), length(SecurityProblemsList),
+                [CVE ++
+                 "(" ++ string:to_upper(erlang:atom_to_list(Level)) ++ ")"];
+            false ->
+                []
+        end
+    end, Vulnerabilities),
+    {length(SecurityProblems), 1 + length(Vulnerabilities),
      LibrarySource, SecurityProblems}.
+
+version_info_openssl_check([], _) ->
+    false;
+version_info_openssl_check([Version | _], Version) ->
+    true;
+version_info_openssl_check([Affected | AffectedL], Version) ->
+    case lists:splitwith(fun(C) -> C /= $- end, Affected) of
+        {[_ | _], []} ->
+            version_info_openssl_check(AffectedL, Version);
+        {AffectedFrom, AffectedTo} ->
+            case lists:prefix(AffectedFrom, Version) andalso
+                 lists:last(Version) =< lists:last(AffectedTo) of
+                true ->
+                    true;
+                false ->
+                    version_info_openssl_check(AffectedL, Version)
+            end
+    end.
 
 version_info_crypto() ->
     {ok, _} = application:ensure_all_started(crypto),
