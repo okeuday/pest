@@ -3,7 +3,7 @@ defmodule PEST.Mixfile do
 
   def project do
     [app: :pest,
-     version: "0.6.0",
+     version: "0.7.0",
      language: :erlang,
      description: description(),
      package: package(),

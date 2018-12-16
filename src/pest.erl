@@ -9,7 +9,7 @@
 %%%
 %%% MIT License
 %%%
-%%% Copyright (c) 2016-2017 Michael Truog <mjtruog at protonmail dot com>
+%%% Copyright (c) 2016-2018 Michael Truog <mjtruog at protonmail dot com>
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a
 %%% copy of this software and associated documentation files (the "Software"),
@@ -29,13 +29,13 @@
 %%% FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 %%% DEALINGS IN THE SOFTWARE.
 %%%
-%%% @version 0.6.0 {@date} {@time}
+%%% @version 0.7.0 {@date} {@time}
 %%%------------------------------------------------------------------------
 
 -ifndef(ESCRIPT).
 -module(pest).
 -endif.
--vsn("0.6.0").
+-vsn("0.7.0").
 
 -export([checks/0,
          checks_expand/2,
