@@ -83,7 +83,7 @@ Test
 
 To have pest.erl check itself, use:
 
-    ./pest.erl -v -c -D ErlangOTP/21.0 ./pest.erl
+    ./pest.erl -v -c -D ErlangOTP/23.0.1 ./pest.erl
 
 Indirect Security Concerns in Erlang/OTP
 ----------------------------------------
@@ -1214,6 +1214,16 @@ Limitations
   this problem, you can make sure optimizations are being used during
   compilation and confirm you are using PEST with the beam output of the
   compilation.
+
+Updates
+-------
+
+Example command line use to update the cached data kept in `priv/pest.dat`
+is shown below:
+
+    ./pest.erl -v -b -d ~/installed/lib/erlang/lib/ -U pest/dependency/ErlangOTP/22.3.4.1
+    ./pest.erl -v -b -d ~/installed/lib/erlang/lib/ -U pest/dependency/ErlangOTP/23.0.1
+    ./pest.erl -U crypto
 
 Author
 ------
