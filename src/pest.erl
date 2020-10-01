@@ -165,39 +165,19 @@ checks() ->
       [{erlang, open_port, 2}]},
      {80,
       "OS shell usage may require input validation",
-      [{os, cmd, 1}]},
+      [{os, cmd, 2}]},
      {15,
       "Keep OpenSSL updated for crypto module use (run with \"-V crypto\")",
       application_modules(public_key) ++
       application_modules(snmp) ++
       application_modules(ssh) ++
       application_modules(ssl) ++
+      application_modules(crypto) ++
       [% encrypt_debug_info option usage
        {compile, file, 2},
        {compile, forms, 2},
        {compile, noenv_file, 2},
-       {compile, noenv_forms, 2},
-       % crypto encryption/decryption API
-       {crypto, block_encrypt, 3},
-       {crypto, block_decrypt, 3},
-       {crypto, block_encrypt, 4},
-       {crypto, block_decrypt, 4},
-       {crypto, compute_key, 4},
-       {crypto, ec_curve, 1},
-       {crypto, generate_key, 2},
-       {crypto, generate_key, 3},
-       {crypto, next_iv, 2},
-       {crypto, next_iv, 3},
-       {crypto, private_decrypt, 4},
-       {crypto, private_encrypt, 4},
-       {crypto, public_decrypt, 4},
-       {crypto, public_encrypt, 4},
-       {crypto, sign, 4},
-       {crypto, stream_init, 2},
-       {crypto, stream_init, 3},
-       {crypto, stream_encrypt, 2},
-       {crypto, stream_decrypt, 2},
-       {crypto, verify, 5}]},
+       {compile, noenv_forms, 2}]},
      {10,
       "Dynamic creation of atoms can exhaust atom memory",
       application_modules(xmerl) ++
@@ -205,13 +185,10 @@ checks() ->
        {erlang, binary_to_term, 1}, % use 'safe' argument
        {erlang, list_to_atom, 1},
        {file, consult, 1},
-       {file, eval, 1},
        {file, eval, 2},
        {file, path_consult, 2},
-       {file, path_eval, 2},
-       {file, path_script, 2},
+       {file, path_eval, 3},
        {file, path_script, 3},
-       {file, script, 1},
        {file, script, 2}]}].
 
 %%-------------------------------------------------------------------------

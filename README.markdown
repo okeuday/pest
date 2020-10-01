@@ -34,7 +34,7 @@ command line argument, with the output shown below:
       -V [COMPONENT]  Print version information
                       (valid components are: pest, crypto)
 
-Erlang/OTP version 19.0 and higher is required.
+Erlang/OTP version 21.0 and higher is required.
 If beam files are used, they must have been compiled with the `debug_info`
 option to provide the `abstract_code` used by pest.erl.  However, pest.erl
 also consumes Erlang source code, including Erlang source escript files.
