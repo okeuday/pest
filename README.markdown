@@ -981,7 +981,7 @@ performs, add each dependency that needs to be included in the scan with the
 after the dependencies are processed, but before the scan, add the `-i`
 command line argument to display all the checks.  Below is the
 resulting expanded checks after including Erlang/OTP indirect function calls
-(4748 total lines that represent an exhaustive search for possible problems):
+(4772 total lines that represent an exhaustive search for possible problems):
 
     $ ./pest.erl -vb -d ~/installed/lib/erlang/lib/ -i
     [{90,"Port Drivers may cause undefined behavior",
