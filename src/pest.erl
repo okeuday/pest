@@ -9,7 +9,7 @@
 %%%
 %%% MIT License
 %%%
-%%% Copyright (c) 2016-2020 Michael Truog <mjtruog at protonmail dot com>
+%%% Copyright (c) 2016-2021 Michael Truog <mjtruog at protonmail dot com>
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a
 %%% copy of this software and associated documentation files (the "Software"),
@@ -29,13 +29,13 @@
 %%% FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 %%% DEALINGS IN THE SOFTWARE.
 %%%
-%%% @version 0.7.0 {@date} {@time}
+%%% @version 0.8.0 {@date} {@time}
 %%%------------------------------------------------------------------------
 
 -ifndef(ESCRIPT).
 -module(pest).
 -endif.
--vsn("0.7.0").
+-vsn("0.8.0").
 
 -export([checks/0,
          checks_expand/2,
@@ -404,7 +404,7 @@ main(Arguments) ->
 %%%------------------------------------------------------------------------
 
 main_arguments(Arguments) ->
-    main_arguments(Arguments, [], [], [], [], #state{}).
+    main_arguments(main_arguments_split(Arguments), [], [], [], [], #state{}).
 
 main_arguments(["-b" | Arguments], FilePaths, Directories,
                DependencyFilePaths, DependencyDirectories,
@@ -448,6 +448,21 @@ main_arguments(["-e" | Arguments], FilePaths, Directories,
                    DependencyFilePaths, DependencyDirectories,
                    State#state{input_source_only = true,
                                recursive = true});
+main_arguments(["-E", DependencyIdentifier | _], _, _, _, _, _) ->
+    {ok, PestData0} = pest_data_find(pest),
+    {value,
+     {dependency, Dependencies},
+     PestData1} = lists:keytake(dependency, 1, PestData0),
+    case lists:keytake(DependencyIdentifier, 1, Dependencies) of
+        false ->
+            io:format("\"~s\" not found! (check -L)~n", [DependencyIdentifier]),
+            exit_code(1);
+        {value, _, DependenciesNew} ->
+            PestDataN = [{dependency, DependenciesNew} | PestData1],
+            ok = pest_data_store(pest, PestDataN),
+            io:format("\"~s\" erased~n", [DependencyIdentifier]),
+            exit_code(0)
+    end;
 main_arguments(["-h" | _], _, _, _, _, _) ->
     io:format(help(), [filename:basename(?FILE)]),
     exit_code(0);
@@ -456,6 +471,13 @@ main_arguments(["-i" | Arguments], FilePaths, Directories,
     main_arguments(Arguments, FilePaths, Directories,
                    DependencyFilePaths, DependencyDirectories,
                    State#state{checks_info = true});
+main_arguments(["-L" | _], _, _, _, _, _) ->
+    {ok, PestData} = pest_data_find(pest),
+    {dependency, Dependencies} = lists:keyfind(dependency, 1, PestData),
+    lists:foreach(fun({DependencyIdentifier, _}) ->
+        io:format("~s~n", [DependencyIdentifier])
+    end, Dependencies),
+    exit_code(0);
 main_arguments(["-m", ApplicationName | _], _, _, _, _, _) ->
     Application = erlang:list_to_atom(ApplicationName),
     io:format("~p~n", [application_modules(Application)]),
@@ -590,6 +612,15 @@ main_arguments([], FilePaths0, Directories,
                         file_paths = FilePathsN}
     end.
 
+main_arguments_split([] = Arguments) ->
+    Arguments;
+main_arguments_split([[$-, _] = Argument | Arguments]) ->
+    [Argument | main_arguments_split(Arguments)];
+main_arguments_split([[$-, C | L] | Arguments]) ->
+    [[$-, C] | main_arguments_split([[$- | L] | Arguments])];
+main_arguments_split([Argument | Arguments]) ->
+    [Argument | main_arguments_split(Arguments)].
+
 main_warnings_merge([], Warnings, _) ->
     Warnings;
 main_warnings_merge([{Severity, Message, Problems} | FileWarnings],
@@ -720,8 +751,7 @@ dependency_store(Dependency, Checks) ->
                                    {Dependency, Checks}),
     PestDataN = lists:keystore(dependency, 1, PestData2,
                                {dependency, DependenciesN}),
-    pest_data_store(pest, PestDataN),
-    ok.
+    pest_data_store(pest, PestDataN).
 
 analyze_store(Call, Line,
               #warnings{function_calls = FunctionCalls} = Warnings) ->
@@ -1100,8 +1130,10 @@ help() ->
                   (provide the dependency as a file path or directory)
   -D IDENTIFIER   Expand the checks to include a dependency from an identifier
   -e              Only process source files recursively
+  -E IDENTIFIER   Erase data associated with a dependency identifier
   -h              List available command line flags
   -i              Display checks information after expanding dependencies
+  -L              List available dependency identifiers
   -m APPLICATION  Display a list of modules in an Erlang/OTP application
   -p DIRECTORY    Append a directory on the code server's search path list
   -r              Recursively search directories
