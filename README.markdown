@@ -98,8 +98,8 @@ Indirect Security Concerns in Erlang/OTP
 Usage of various Erlang/OTP dependencies can have their own security concerns
 which Erlang source code may depend on indirectly.  To provide a representation
 of security concerns related to Erlang/OTP dependencies, the pest.erl script
-was ran on all of the beam files installed for Erlang/OTP 21.0, with the result
-provided below:
+was ran on all of the beam files installed for Erlang/OTP 23.2.3, with the
+result provided below:
 
     $ ./pest.erl -vb ~/installed/lib/erlang/lib/
      90: Port Drivers may cause undefined behavior
