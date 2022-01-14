@@ -9,7 +9,7 @@
 %%%
 %%% MIT License
 %%%
-%%% Copyright (c) 2016-2021 Michael Truog <mjtruog at protonmail dot com>
+%%% Copyright (c) 2016-2022 Michael Truog <mjtruog at protonmail dot com>
 %%%
 %%% Permission is hereby granted, free of charge, to any person obtaining a
 %%% copy of this software and associated documentation files (the "Software"),
@@ -29,13 +29,13 @@
 %%% FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 %%% DEALINGS IN THE SOFTWARE.
 %%%
-%%% @version 0.8.0 {@date} {@time}
+%%% @version 0.9.0 {@date} {@time}
 %%%------------------------------------------------------------------------
 
 -ifndef(ESCRIPT).
 -module(pest).
 -endif.
--vsn("0.8.0").
+-vsn("0.9.0").
 
 -export([checks/0,
          checks_expand/2,
@@ -747,8 +747,8 @@ dependency_store(Dependency, Checks) ->
     {value,
      {dependency, Dependencies0},
      PestData2} = lists:keytake(dependency, 1, PestData1),
-    DependenciesN = lists:keystore(Dependency, 1, Dependencies0,
-                                   {Dependency, Checks}),
+    Dependencies1 = lists:ukeysort(1, Dependencies0), % <- supporting old data
+    DependenciesN = lists:ukeymerge(1, [{Dependency, Checks}], Dependencies1),
     PestDataN = lists:keystore(dependency, 1, PestData2,
                                {dependency, DependenciesN}),
     pest_data_store(pest, PestDataN).
@@ -1037,6 +1037,28 @@ version_info_openssl(VersionRuntime) ->
         error ->
             []
     end,
+    LookupN = lists:foldl(fun({CVE, Level, _Fix, Affected}, Lookup0) ->
+        case version_info_openssl_check(Affected, Version) of
+            true ->
+                LevelKey = if
+                    Level =:= critical ->
+                        0;
+                    Level =:= high ->
+                        1;
+                    Level =:= moderate ->
+                        2;
+                    Level =:= low ->
+                        3
+                end,
+                SecurityProblem = CVE ++
+                    "(" ++ string:to_upper(erlang:atom_to_list(Level)) ++ ")",
+                maps:update_with(LevelKey, fun(LevelSecurityProblems) ->
+                    [SecurityProblem | LevelSecurityProblems]
+                end, [SecurityProblem], Lookup0);
+            false ->
+                Lookup0
+        end
+    end, #{}, Vulnerabilities),
     SecurityProblems = if
         % based on
         % https://en.wikipedia.org/wiki/OpenSSL#Major_version_releases
@@ -1044,16 +1066,9 @@ version_info_openssl(VersionRuntime) ->
             ["OLD OpenSSL!"];
         true ->
             []
-    end ++
-    lists:flatmap(fun({CVE, Level, _Fix, Affected}) ->
-        case version_info_openssl_check(Affected, Version) of
-            true ->
-                [CVE ++
-                 "(" ++ string:to_upper(erlang:atom_to_list(Level)) ++ ")"];
-            false ->
-                []
-        end
-    end, Vulnerabilities),
+    end ++ lists:flatmap(fun({_, LevelSecurityProblems}) ->
+        LevelSecurityProblems
+    end, lists:keysort(1, maps:to_list(LookupN))),
     {length(SecurityProblems), 1 + length(Vulnerabilities),
      LibrarySource, SecurityProblems}.
 
@@ -1117,9 +1132,14 @@ version_info_pest() ->
     end,
     {ok, Data} = file:read_file(?FILE),
     FileHash = erlang:phash2(Data),
-    io:format("~s version ~s (~w)~n",
-              [filename:basename(?FILE),
-               Version, FileHash]).
+    {ok, PestData} = pest_data_find(pest),
+    {dependency, Dependencies} = lists:keyfind(dependency, 1, PestData),
+    DependencyNames = [DependencyName || {DependencyName, _} <- Dependencies],
+    io:format("~s version ~s (~w)~n"
+              "    ~w dependency identifiers found~n"
+              "    ~p~n",
+              [filename:basename(?FILE), Version, FileHash,
+               length(DependencyNames), DependencyNames]).
 
 help() ->
 "Usage ~s [OPTION] [FILES] [DIRECTORIES]
