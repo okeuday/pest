@@ -3,7 +3,7 @@
 
 {application, pest,
   [{description, "Primitive Erlang Security Tool"},
-   {vsn, "0.7.0"},
+   {vsn, "0.9.0"},
    {modules, [pest]},
    {registered, []},
    {applications, [syntax_tools, stdlib, kernel]}]}.
