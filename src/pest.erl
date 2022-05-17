@@ -189,7 +189,10 @@ checks() ->
        {file, path_consult, 2},
        {file, path_eval, 3},
        {file, path_script, 3},
-       {file, script, 2}]}].
+       {file, script, 2}]},
+     {5,
+      "CVE-2018-25032 zlib 1.2.11 allows memory corruption when deflating (erts)",
+      [{zlib, deflate, 3}]}].
 
 %%-------------------------------------------------------------------------
 
@@ -730,7 +733,7 @@ checks_expand_loop(FilePaths, ChecksOld) ->
         lists:umerge(ChecksNew0, [{Severity, Message, lists:usort(Problems)}])
     end, [], ListLookupN)),
     if
-        
+
         ChecksNewN == ChecksOld ->
             ChecksOld;
         true ->
@@ -756,7 +759,7 @@ dependency_store(Dependency, Checks) ->
 analyze_store(Call, Line,
               #warnings{function_calls = FunctionCalls} = Warnings) ->
     Warnings#warnings{function_calls = [{Call, Line} | FunctionCalls]}.
-    
+
 analyze_checks(#warnings{checks_lookup = ChecksLookup,
                          function_calls = FunctionCalls} = Warnings0,
                Location, CurrentFunction) ->
@@ -891,7 +894,7 @@ application_modules(Application) when is_atom(Application) ->
         {error, Reason} ->
             erlang:error({invalid_application, Reason})
     end.
-    
+
 function_exists(M, F, A) ->
     Loaded = code:is_loaded(M) =/= false,
     if

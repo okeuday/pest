@@ -6,6 +6,8 @@ Primitive Erlang Security Tool (PEST)
 [![Build Status](https://secure.travis-ci.org/okeuday/pest.png?branch=master)](http://travis-ci.org/okeuday/pest)
 [![hex.pm version](https://img.shields.io/hexpm/v/pest.svg)](https://hex.pm/packages/pest)
 
+*CVEs* [Erlang](https://www.cvedetails.com/vendor/9446/Erlang.html) [OpenSSL](https://www.cvedetails.com/product/383/Openssl-Openssl.html?vendor_id=217) [PCRE](https://www.cvedetails.com/vendor/3265/Pcre.html) [zlib](https://www.cvedetails.com/vendor/13265/Zlib.html) [asmjit](https://github.com/asmjit/asmjit/issues) [ryu](https://github.com/ulfjack/ryu/issues)
+
 Do a basic scan of Erlang source code and report any function calls that may
 cause Erlang source code to be insecure.
 
@@ -13,28 +15,30 @@ The tool is provided in the form of an escript (an Erlang script) which may
 also be used as a module.  Usage of the script is provided with the `-h`
 command line argument, with the output shown below:
 
-    Usage pest.erl [OPTION] [FILES] [DIRECTORIES]
-    
-      -b              Only process beam files recursively
-      -c              Perform internal consistency checks
-      -d DEPENDENCY   Expand the checks to include a dependency
-                      (provide the dependency as a file path or directory)
-      -D IDENTIFIER   Expand the checks to include a dependency from an identifier
-      -e              Only process source files recursively
-      -E IDENTIFIER   Erase data associated with a dependency identifier
-      -h              List available command line flags
-      -i              Display checks information after expanding dependencies
-      -L              List available dependency identifiers
-      -m APPLICATION  Display a list of modules in an Erlang/OTP application
-      -p DIRECTORY    Append a directory on the code server's search path list
-      -r              Recursively search directories
-      -s SEVERITY     Set the minimum severity to use when reporting problems
-                      (default is 50)
-      -U COMPONENT    Update local data related to a component
-                      (valid components are: crypto, pest/dependency/IDENTIFIER)
-      -v              Verbose output (set the minimum severity to 0)
-      -V [COMPONENT]  Print version information
-                      (valid components are: pest, crypto)
+```
+Usage pest.erl [OPTION] [FILES] [DIRECTORIES]
+
+  -b              Only process beam files recursively
+  -c              Perform internal consistency checks
+  -d DEPENDENCY   Expand the checks to include a dependency
+                  (provide the dependency as a file path or directory)
+  -D IDENTIFIER   Expand the checks to include a dependency from an identifier
+  -e              Only process source files recursively
+  -E IDENTIFIER   Erase data associated with a dependency identifier
+  -h              List available command line flags
+  -i              Display checks information after expanding dependencies
+  -L              List available dependency identifiers
+  -m APPLICATION  Display a list of modules in an Erlang/OTP application
+  -p DIRECTORY    Append a directory on the code server's search path list
+  -r              Recursively search directories
+  -s SEVERITY     Set the minimum severity to use when reporting problems
+                  (default is 50)
+  -U COMPONENT    Update local data related to a component
+                  (valid components are: crypto, pest/dependency/IDENTIFIER)
+  -v              Verbose output (set the minimum severity to 0)
+  -V [COMPONENT]  Print version information
+                  (valid components are: pest, crypto)
+```
 
 Erlang/OTP version 21.0 and higher is required.
 If beam files are used, they must have been compiled with the `debug_info`
