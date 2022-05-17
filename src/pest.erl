@@ -733,7 +733,6 @@ checks_expand_loop(FilePaths, ChecksOld) ->
         lists:umerge(ChecksNew0, [{Severity, Message, lists:usort(Problems)}])
     end, [], ListLookupN)),
     if
-
         ChecksNewN == ChecksOld ->
             ChecksOld;
         true ->
