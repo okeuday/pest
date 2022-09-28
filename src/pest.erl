@@ -189,10 +189,7 @@ checks() ->
        {file, path_consult, 2},
        {file, path_eval, 3},
        {file, path_script, 3},
-       {file, script, 2}]},
-     {5,
-      "CVE-2018-25032 zlib 1.2.11 allows memory corruption when deflating (erts)",
-      [{zlib, deflate, 3}]}].
+       {file, script, 2}]}].
 
 %%-------------------------------------------------------------------------
 
