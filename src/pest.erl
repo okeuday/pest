@@ -975,6 +975,10 @@ update_crypto_openssl_data_parse([], D) ->
 update_crypto_openssl_data_parse([_ | L], D) ->
     update_crypto_openssl_data_parse(L, D).
 
+update_crypto_openssl_data_parse_version(C) ->
+    (C >= $0 andalso C =< $9) orelse (C == $.) orelse
+    (C >= $a andalso C =< $z).
+
 update_crypto_openssl_data_parse_cve("[Critical severity]" ++ L, _, CVE, D) ->
     update_crypto_openssl_data_parse_cve(L, critical, CVE, D);
 update_crypto_openssl_data_parse_cve("[High severity]" ++ L, _, CVE, D) ->
@@ -985,12 +989,11 @@ update_crypto_openssl_data_parse_cve("[Low severity]" ++ L, _, CVE, D) ->
     update_crypto_openssl_data_parse_cve(L, low, CVE, D);
 update_crypto_openssl_data_parse_cve("Fixed in OpenSSL " ++ L0,
                                      Level, CVE, D) ->
-    Version = fun(V) ->
-        (V >= $0 andalso V =< $9) orelse (V == $.) orelse
-        (V >= $a andalso V =< $z)
-    end,
-    {_, L1} = lists:splitwith(fun(C0) -> not Version(C0) end, L0),
-    {Fix, LN} = lists:splitwith(fun(C1) -> Version(C1) end, L1),
+    {_, L1} = lists:splitwith(fun(C0) ->
+        not update_crypto_openssl_data_parse_version(C0)
+    end, L0),
+    {Fix,
+     LN} = lists:splitwith(fun update_crypto_openssl_data_parse_version/1, L1),
     update_crypto_openssl_data_parse_cve_fix(LN, Fix, Level, CVE, D);
 update_crypto_openssl_data_parse_cve(">CVE-" ++ _ = L, _, _, D) ->
     update_crypto_openssl_data_parse(L, D);
@@ -999,11 +1002,15 @@ update_crypto_openssl_data_parse_cve([], _, _, D) ->
 update_crypto_openssl_data_parse_cve([_ | L], Level, CVE, D) ->
     update_crypto_openssl_data_parse_cve(L, Level, CVE, D).
 
-update_crypto_openssl_data_parse_cve_fix("(Affected " ++ L0,
+update_crypto_openssl_data_parse_cve_fix("(Affected since " ++ L0,
                                          Fix, Level, CVE, D) ->
-    {Affected, LN} = lists:splitwith(fun(C0) -> C0 /= $) end, L0),
-    AffectedList = string:tokens(Affected, ", "),
-    Entry = {CVE, Level, Fix, AffectedList},
+    % previously was an Affected list before the website changed,
+    % using tuples to distinguish the current data from the old
+    {Since,
+     LN} = lists:splitwith(fun update_crypto_openssl_data_parse_version/1, L0),
+    Entry = {CVE, Level,
+             erlang:list_to_tuple(string:tokens(Fix, ".")),
+             erlang:list_to_tuple(string:tokens(Since, "."))},
     update_crypto_openssl_data_parse_cve(LN, Level, CVE, [Entry | D]);
 update_crypto_openssl_data_parse_cve_fix(">CVE-" ++ _ = L, _, _, _, D) ->
     update_crypto_openssl_data_parse(L, D);
@@ -1015,29 +1022,35 @@ update_crypto_openssl_data_parse_cve_fix([_ | L], Fix, Level, CVE, D) ->
 version_info_openssl(VersionRuntime) ->
     [<<"OpenSSL">>, VersionMajor, VersionMinor, VersionPatch |
      _] = binary:split(VersionRuntime, [<<" ">>, <<".">>], [global]),
-    Version = erlang:binary_to_list(<<VersionMajor/binary, $.,
-                                      VersionMinor/binary, $.,
-                                      VersionPatch/binary>>),
-    {PatchNumber, PatchString} = lists:splitwith(fun(C) ->
+    VersionStr = erlang:binary_to_list(<<VersionMajor/binary, $.,
+                                         VersionMinor/binary, $.,
+                                         VersionPatch/binary>>),
+    VersionMajorStr = erlang:binary_to_list(VersionMajor),
+    VersionMinorStr = erlang:binary_to_list(VersionMinor),
+    VersionPatchStr = erlang:binary_to_list(VersionPatch),
+    {VersionPatchStrPrefix, VersionPatchStrSuffix} = lists:splitwith(fun(C) ->
         (C >= $0) andalso (C =< $9)
-    end, erlang:binary_to_list(VersionPatch)),
+    end, VersionPatchStr),
     LibrarySource = if
-        PatchString == "" ->
+        VersionPatchStrSuffix == "" ->
             "package manager fork?";
         true ->
             "openssl mainline!"
     end,
-    Fork = {erlang:binary_to_list(VersionMajor),
-            erlang:binary_to_list(VersionMinor),
-            PatchNumber},
+    Version = {VersionMajorStr,
+               VersionMinorStr,
+               VersionPatchStr},
+    Fork = {VersionMajorStr,
+            VersionMinorStr,
+            VersionPatchStrPrefix},
     Vulnerabilities = case pest_data_find(crypto) of
         {ok, [{openssl, VulnerabilitiesData}]} ->
             VulnerabilitiesData;
         error ->
             []
     end,
-    LookupN = lists:foldl(fun({CVE, Level, _Fix, Affected}, Lookup0) ->
-        case version_info_openssl_check(Affected, Version) of
+    LookupN = lists:foldl(fun({CVE, Level, Fix, Since}, Lookup0) ->
+        case version_info_openssl_check(Since, Fix, Version, VersionStr) of
             true ->
                 LevelKey = if
                     Level =:= critical ->
@@ -1071,21 +1084,29 @@ version_info_openssl(VersionRuntime) ->
     {length(SecurityProblems), 1 + length(Vulnerabilities),
      LibrarySource, SecurityProblems}.
 
-version_info_openssl_check([], _) ->
+version_info_openssl_check(Since, _, _, VersionStr)
+    when is_list(Since) ->
+    % old Affected list data that was stored
+    version_info_openssl_check_old(Since, VersionStr);
+version_info_openssl_check(Since, Fix, Version, _)
+    when is_tuple(Since), is_tuple(Fix), is_tuple(Version) ->
+    (Version >= Since) andalso (Version < Fix).
+
+version_info_openssl_check_old([], _) ->
     false;
-version_info_openssl_check([Version | _], Version) ->
+version_info_openssl_check_old([VersionStr | _], VersionStr) ->
     true;
-version_info_openssl_check([Affected | AffectedL], Version) ->
+version_info_openssl_check_old([Affected | AffectedL], VersionStr) ->
     case lists:splitwith(fun(C) -> C /= $- end, Affected) of
         {[_ | _], []} ->
-            version_info_openssl_check(AffectedL, Version);
+            version_info_openssl_check_old(AffectedL, VersionStr);
         {AffectedFrom, AffectedTo} ->
-            case lists:prefix(AffectedFrom, Version) andalso
-                 lists:last(Version) =< lists:last(AffectedTo) of
+            case lists:prefix(AffectedFrom, VersionStr) andalso
+                 lists:last(VersionStr) =< lists:last(AffectedTo) of
                 true ->
                     true;
                 false ->
-                    version_info_openssl_check(AffectedL, Version)
+                    version_info_openssl_check_old(AffectedL, VersionStr)
             end
     end.
 
