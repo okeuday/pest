@@ -1019,30 +1019,41 @@ update_crypto_openssl_data_parse_cve_fix([], _, _, _, D) ->
 update_crypto_openssl_data_parse_cve_fix([_ | L], Fix, Level, CVE, D) ->
     update_crypto_openssl_data_parse_cve_fix(L, Fix, Level, CVE, D).
 
-version_info_openssl(VersionRuntime) ->
-    [<<"OpenSSL">>, VersionMajor, VersionMinor, VersionPatch |
-     _] = binary:split(VersionRuntime, [<<" ">>, <<".">>], [global]),
-    VersionStr = erlang:binary_to_list(<<VersionMajor/binary, $.,
-                                         VersionMinor/binary, $.,
-                                         VersionPatch/binary>>),
-    VersionMajorStr = erlang:binary_to_list(VersionMajor),
-    VersionMinorStr = erlang:binary_to_list(VersionMinor),
-    VersionPatchStr = erlang:binary_to_list(VersionPatch),
-    {VersionPatchStrPrefix, VersionPatchStrSuffix} = lists:splitwith(fun(C) ->
+version_info_openssl(<<"LibreSSL">>,
+                     _VersionLibreSSLMajor,
+                     _VersionLibreSSLMinor,
+                     _VersionLibreSSLPatch) ->
+    LibrarySource = "libressl",
+    Vulnerabilities = [],
+    SecurityProblems = ["LibreSSL vulnerabilities are unknown!"],
+    {length(SecurityProblems), 1 + length(Vulnerabilities),
+     LibrarySource, SecurityProblems};
+version_info_openssl(<<"OpenSSL">>,
+                     VersionOpenSSLMajor,
+                     VersionOpenSSLMinor,
+                     VersionOpenSSLPatch) ->
+    VersionOpenSSLStr = erlang:binary_to_list(<<VersionOpenSSLMajor/binary, $.,
+                                                VersionOpenSSLMinor/binary, $.,
+                                                VersionOpenSSLPatch/binary>>),
+    VersionOpenSSLMajorStr = erlang:binary_to_list(VersionOpenSSLMajor),
+    VersionOpenSSLMinorStr = erlang:binary_to_list(VersionOpenSSLMinor),
+    VersionOpenSSLPatchStr = erlang:binary_to_list(VersionOpenSSLPatch),
+    {VersionOpenSSLPatchStrPrefix,
+     VersionOpenSSLPatchStrSuffix} = lists:splitwith(fun(C) ->
         (C >= $0) andalso (C =< $9)
-    end, VersionPatchStr),
+    end, VersionOpenSSLPatchStr),
     LibrarySource = if
-        VersionPatchStrSuffix == "" ->
+        VersionOpenSSLPatchStrSuffix == "" ->
             "package manager fork?";
         true ->
             "openssl mainline!"
     end,
-    Version = {VersionMajorStr,
-               VersionMinorStr,
-               VersionPatchStr},
-    Fork = {VersionMajorStr,
-            VersionMinorStr,
-            VersionPatchStrPrefix},
+    VersionOpenSSL = {VersionOpenSSLMajorStr,
+                      VersionOpenSSLMinorStr,
+                      VersionOpenSSLPatchStr},
+    VersionOpenSSLFork = {VersionOpenSSLMajorStr,
+                          VersionOpenSSLMinorStr,
+                          VersionOpenSSLPatchStrPrefix},
     Vulnerabilities = case pest_data_find(crypto) of
         {ok, [{openssl, VulnerabilitiesData}]} ->
             VulnerabilitiesData;
@@ -1050,7 +1061,8 @@ version_info_openssl(VersionRuntime) ->
             []
     end,
     LookupN = lists:foldl(fun({CVE, Level, Fix, Since}, Lookup0) ->
-        case version_info_openssl_check(Since, Fix, Version, VersionStr) of
+        case version_info_openssl_check(Since, Fix,
+                                        VersionOpenSSL, VersionOpenSSLStr) of
             true ->
                 LevelKey = if
                     Level =:= critical ->
@@ -1074,7 +1086,7 @@ version_info_openssl(VersionRuntime) ->
     SecurityProblems = if
         % based on
         % https://en.wikipedia.org/wiki/OpenSSL#Major_version_releases
-        Fork =< {"1", "0", "0"} ->
+        VersionOpenSSLFork =< {"1", "0", "0"} ->
             ["OLD OpenSSL!"];
         true ->
             []
@@ -1084,29 +1096,29 @@ version_info_openssl(VersionRuntime) ->
     {length(SecurityProblems), 1 + length(Vulnerabilities),
      LibrarySource, SecurityProblems}.
 
-version_info_openssl_check(Since, _, _, VersionStr)
+version_info_openssl_check(Since, _, _, VersionOpenSSLStr)
     when is_list(Since) ->
     % old Affected list data that was stored
-    version_info_openssl_check_old(Since, VersionStr);
-version_info_openssl_check(Since, Fix, Version, _)
-    when is_tuple(Since), is_tuple(Fix), is_tuple(Version) ->
-    (Version >= Since) andalso (Version < Fix).
+    version_info_openssl_check_old(Since, VersionOpenSSLStr);
+version_info_openssl_check(Since, Fix, VersionOpenSSL, _)
+    when is_tuple(Since), is_tuple(Fix), is_tuple(VersionOpenSSL) ->
+    (VersionOpenSSL >= Since) andalso (VersionOpenSSL < Fix).
 
 version_info_openssl_check_old([], _) ->
     false;
-version_info_openssl_check_old([VersionStr | _], VersionStr) ->
+version_info_openssl_check_old([VersionOpenSSLStr | _], VersionOpenSSLStr) ->
     true;
-version_info_openssl_check_old([Affected | AffectedL], VersionStr) ->
+version_info_openssl_check_old([Affected | AffectedL], VersionOpenSSLStr) ->
     case lists:splitwith(fun(C) -> C /= $- end, Affected) of
         {[_ | _], []} ->
-            version_info_openssl_check_old(AffectedL, VersionStr);
+            version_info_openssl_check_old(AffectedL, VersionOpenSSLStr);
         {AffectedFrom, AffectedTo} ->
-            case lists:prefix(AffectedFrom, VersionStr) andalso
-                 lists:last(VersionStr) =< lists:last(AffectedTo) of
+            case lists:prefix(AffectedFrom, VersionOpenSSLStr) andalso
+                 lists:last(VersionOpenSSLStr) =< lists:last(AffectedTo) of
                 true ->
                     true;
                 false ->
-                    version_info_openssl_check_old(AffectedL, VersionStr)
+                    version_info_openssl_check_old(AffectedL, VersionOpenSSLStr)
             end
     end.
 
@@ -1115,10 +1127,17 @@ version_info_crypto() ->
     lists:foreach(fun(CryptoComponent) ->
         case CryptoComponent of
             {<<"OpenSSL">>, VersionHeader, VersionRuntime} ->
+                [VersionOpenSSLType,
+                 VersionOpenSSLMajor, VersionOpenSSLMinor, VersionOpenSSLPatch |
+                 _] = binary:split(VersionRuntime,
+                                   [<<" ">>, <<".">>], [global]),
                 {SecurityProblemsFound,
                  SecurityProblemsKnown,
                  LibrarySource,
-                 SecurityProblems} = version_info_openssl(VersionRuntime),
+                 SecurityProblems} = version_info_openssl(VersionOpenSSLType,
+                                                          VersionOpenSSLMajor,
+                                                          VersionOpenSSLMinor,
+                                                          VersionOpenSSLPatch),
                 io:format("OpenSSL version information:~n"
                           "    crypto compile-time "
                               "openssl/opensslv.h version ~w~n"
