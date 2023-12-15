@@ -6,7 +6,7 @@ Primitive Erlang Security Tool (PEST)
 [![Build Status](https://app.travis-ci.com/okeuday/pest.png?branch=master)](https://app.travis-ci.com/okeuday/pest)
 [![hex.pm version](https://img.shields.io/hexpm/v/pest.svg)](https://hex.pm/packages/pest)
 
-**CVEs:** [Erlang](https://www.cvedetails.com/vendor/9446/Erlang.html) [OpenSSL](https://www.cvedetails.com/product/383/Openssl-Openssl.html?vendor_id=217) [PCRE](https://www.cvedetails.com/vendor/3265/Pcre.html) [zlib](https://www.cvedetails.com/vendor/13265/Zlib.html) [asmjit](https://github.com/asmjit/asmjit/issues) [ryu](https://github.com/ulfjack/ryu/issues)
+**CVEs:** [Erlang](https://www.cvedetails.com/vendor/9446/Erlang.html) [OpenSSL](https://www.cvedetails.com/product/383/Openssl-Openssl.html?vendor_id=217) [LibreSSL](https://www.cvedetails.com/product/30688/Openbsd-Libressl.html?vendor_id=97) [PCRE](https://www.cvedetails.com/vendor/3265/Pcre.html) [zlib](https://www.cvedetails.com/vendor/13265/Zlib.html) [asmjit](https://github.com/asmjit/asmjit/issues) [ryu](https://github.com/ulfjack/ryu/issues)
 
 Do a basic scan of Erlang source code and report any function calls that may
 cause Erlang source code to be insecure.
